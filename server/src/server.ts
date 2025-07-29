@@ -1,0 +1,76 @@
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import { config } from "./config/config";
+import { connectDB } from "./config/database";
+import { errorHandler } from "./middleware/errorHandler";
+import { authRoutes } from "./routes/authRoutes";
+import { userRoutes } from "./routes/userRoutes";
+import { roomRoutes } from "./routes/roomRoutes";
+import { Server } from "socket.io";
+import { createServer } from "http";
+
+const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: config.FRONTEND_URL,
+    methods: ["GET", "POST"],
+  },
+});
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+});
+
+// Middleware
+app.use(helmet());
+app.use(
+  cors({
+    origin: config.FRONTEND_URL,
+    credentials: true,
+  })
+);
+app.use(limiter);
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
+
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/rooms", roomRoutes);
+
+// Health check
+app.get("/health", (req, res) => {
+  res.json({ status: "OK", timestamp: new Date().toISOString() });
+});
+
+// Error handling
+app.use(errorHandler);
+
+// Socket.IO connection handling (placeholder for video chat logic)
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
+});
+
+const startServer = async () => {
+  try {
+    await connectDB();
+    const PORT = config.PORT || 5000;
+    server.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
+};
+
+startServer();

@@ -43,6 +43,8 @@ src/
 - `POST /api/auth/register` - Register a new user
 - `POST /api/auth/login` - Login user
 - `POST /api/auth/logout` - Logout user
+- `GET /api/auth/google` - Start Google OAuth
+- `GET /api/auth/google/callback` - Handle OAuth callback
 
 ### Users
 
