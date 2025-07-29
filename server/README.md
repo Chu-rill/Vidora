@@ -1,4 +1,4 @@
-# Video Chat App Backend
+# Vidora Backend
 
 A robust Express.js backend for a video chat application built with TypeScript, MongoDB, and Socket.IO.
 

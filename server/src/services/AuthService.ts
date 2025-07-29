@@ -69,12 +69,25 @@ export class AuthService {
   }
 
   private generateToken(userId: string): string {
-    return jwt.sign({ userId }, config.JWT_SECRET as string, {
-      expiresIn: config.JWT_EXPIRE as string | number,
-    });
+    // Ensure JWT_SECRET exists and is a string
+    const secret = config.JWT_SECRET;
+    if (!secret) {
+      throw new Error("JWT_SECRET is not configured");
+    }
+
+    // Handle expiresIn - ensure it's a valid type
+    const expiresIn = config.JWT_EXPIRE;
+    let tokenOptions: jwt.SignOptions = {};
+
+    return jwt.sign({ userId }, secret, tokenOptions);
   }
 
-  verifyToken(token: string): any {
-    return jwt.verify(token, config.JWT_SECRET);
+  verifyToken(token: string): jwt.JwtPayload | string {
+    const secret = config.JWT_SECRET;
+    if (!secret) {
+      throw new Error("JWT_SECRET is not configured");
+    }
+
+    return jwt.verify(token, secret);
   }
 }
