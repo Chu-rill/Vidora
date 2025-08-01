@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { UserRepository } from "../repositories/UserRepository";
 import { config } from "../config/config";
 import { IUser } from "../types";
+import { encrypt } from "../utils/encryption";
 
 export class AuthService {
   private userRepository: UserRepository;
@@ -26,11 +27,14 @@ export class AuthService {
       throw new Error("Username already taken");
     }
 
+    const trimmedPassword = password.trim().toLowerCase();
+    const hashedPassword = await encrypt(trimmedPassword);
+
     // Create user
     const user = await this.userRepository.create({
       username,
       email,
-      password,
+      password: hashedPassword,
     });
 
     // Generate token

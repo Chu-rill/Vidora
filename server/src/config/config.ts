@@ -10,4 +10,7 @@ export const config = {
   BCRYPT_ROUNDS: parseInt(process.env.BCRYPT_ROUNDS || "12"),
   FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:3000",
   NODE_ENV: process.env.NODE_ENV || "development",
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || "",
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || "",
+  SESSION_SECRET: process.env.SESSION_SECRET || "your-session-secret",
 };

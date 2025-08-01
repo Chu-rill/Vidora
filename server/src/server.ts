@@ -2,8 +2,10 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import passport from "passport";
 import { config } from "./config/config";
 import { connectDB } from "./config/database";
+import { setupPassport } from "./config/passport";
 import { errorHandler } from "./middleware/errorHandler";
 import { authRoutes } from "./routes/authRoutes";
 import { userRoutes } from "./routes/userRoutes";
@@ -37,6 +39,26 @@ app.use(
 app.use(limiter);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+// Session middleware for Passport
+app.use(
+  session({
+    secret: config.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: config.NODE_ENV === "production",
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    },
+  })
+);
+
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Setup Passport strategies
+setupPassport();
 
 // Routes
 app.use("/api/auth", authRoutes);

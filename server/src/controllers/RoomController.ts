@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { validationResult } from "express-validator";
 import { RoomService } from "../services/RoomService";
-import { ApiResponse, AuthRequest } from "../types";
+import { ApiResponse } from "../types";
 
 export class RoomController {
   private roomService: RoomService;
@@ -10,7 +10,7 @@ export class RoomController {
     this.roomService = new RoomService();
   }
 
-  createRoom = async (req: AuthRequest, res: Response): Promise<void> => {
+  createRoom = async (req: Request, res: Response): Promise<void> => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -96,7 +96,7 @@ export class RoomController {
     }
   };
 
-  joinRoom = async (req: AuthRequest, res: Response): Promise<void> => {
+  joinRoom = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
       const userId = req.user?.id;
@@ -117,7 +117,7 @@ export class RoomController {
     }
   };
 
-  leaveRoom = async (req: AuthRequest, res: Response): Promise<void> => {
+  leaveRoom = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
       const userId = req.user?.id;

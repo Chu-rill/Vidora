@@ -1,13 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import { AuthService } from "../services/AuthService";
 import { UserService } from "../services/UserService";
-import { AuthRequest, ApiResponse } from "../types";
+import { ApiResponse } from "../types";
 
 const authService = new AuthService();
 const userService = new UserService();
 
 export const authenticate = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -25,7 +25,24 @@ export const authenticate = async (
     const token = authHeader.substring(7);
     const decoded = authService.verifyToken(token);
 
-    const user = await userService.getUserById(decoded.userId);
+    let userId: string | undefined;
+    if (
+      typeof decoded === "object" &&
+      decoded !== null &&
+      "userId" in decoded
+    ) {
+      userId = (decoded as { userId: string }).userId;
+    }
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: "Invalid token payload",
+      } as ApiResponse);
+      return;
+    }
+
+    const user = await userService.getUserById(userId);
     if (!user) {
       res.status(401).json({
         success: false,

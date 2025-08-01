@@ -26,14 +26,6 @@ export interface IRoom extends Document {
   updatedAt: Date;
 }
 
-export interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    username: string;
-    email: string;
-  };
-}
-
 export interface ApiResponse<T = any> {
   success: boolean;
   message: string;
