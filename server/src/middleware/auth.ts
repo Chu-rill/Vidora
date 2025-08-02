@@ -51,8 +51,9 @@ export const authenticate = async (
       return;
     }
 
+    // Transform the user object to match the Express Request interface
     req.user = {
-      id: user._id,
+      id: user._id.toString(), // Convert _id to id
       username: user.username,
       email: user.email,
     };

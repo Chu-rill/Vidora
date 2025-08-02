@@ -1,23 +1,14 @@
-// Create a file: types/express.d.ts
-import { IUser } from "./index"; // Your user interface
-
-declare global {
-  namespace Express {
-    interface Request {
-      user?: IUser;
-    }
-  }
-}
-
-// Alternative: If you want to keep the simplified user object
+// types/express.d.ts
 declare global {
   namespace Express {
     interface Request {
       user?: {
-        id: string;
+        id: string; // Transformed from _id
         username: string;
         email: string;
       };
     }
   }
 }
+
+export {}; // Make this a module

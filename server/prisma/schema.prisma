@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  email        String   @unique
+  password     String
+  avatar       String? // nullable
+  isOnline     Boolean  @default(false)
+  lastSeen     DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  OTP          Otp?
+  rooms        Room[]   @relation("RoomParticipants")
+  createdRooms Room[]   @relation("RoomCreator")
+}
+
+model Otp {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  user      User     @relation(fields: [email], references: [email], onDelete: Cascade)
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Room {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  type            RoomType @default(PUBLIC)
+  creatorId       String
+  creator         User     @relation("RoomCreator", fields: [creatorId], references: [id])
+  participants    User[]   @relation("RoomParticipants")
+  maxParticipants Int      @default(10)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum RoomType {
+  PUBLIC
+  PRIVATE
+}

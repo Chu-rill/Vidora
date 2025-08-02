@@ -15,8 +15,8 @@
     "sourceMap": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "typeRoots": ["./types", "./node_modules/@types"]
+    "typeRoots": ["./node_modules/@types", "./types"]
   },
-  "include": ["src/**/*", "express.d.ts", "types"],
+  "include": ["src/**/*", "types/**/*"],
   "exclude": ["node_modules", "dist"]
 }

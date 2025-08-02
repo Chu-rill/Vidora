@@ -1,48 +1,54 @@
-import { User } from "../models/User";
+import { PrismaClient, User as PrismaUser } from "../../generated/prisma";
 import { IUser } from "../types";
 
+const prisma = new PrismaClient();
+
 export class UserRepository {
-  async create(userData: Partial<IUser>): Promise<IUser> {
-    const user = new User(userData);
-    return await user.save();
+  async create(userData: Partial<IUser>): Promise<PrismaUser> {
+    return await prisma.user.create({ data: userData as any });
   }
 
-  async findById(id: string): Promise<IUser | null> {
-    return await User.findById(id);
+  async findById(id: string): Promise<PrismaUser | null> {
+    return await prisma.user.findUnique({ where: { id } });
   }
 
-  async findByEmail(email: string): Promise<IUser | null> {
-    return await User.findOne({ email });
+  async findByEmail(email: string): Promise<PrismaUser | null> {
+    return await prisma.user.findUnique({ where: { email } });
   }
 
-  async findByUsername(username: string): Promise<IUser | null> {
-    return await User.findOne({ username });
+  async findByUsername(username: string): Promise<PrismaUser | null> {
+    return await prisma.user.findUnique({ where: { username } });
   }
 
   async updateById(
     id: string,
     updateData: Partial<IUser>
-  ): Promise<IUser | null> {
-    return await User.findByIdAndUpdate(id, updateData, { new: true });
+  ): Promise<PrismaUser | null> {
+    return await prisma.user.update({
+      where: { id },
+      data: updateData as any,
+    });
   }
 
-  async deleteById(id: string): Promise<IUser | null> {
-    return await User.findByIdAndDelete(id);
+  async deleteById(id: string): Promise<PrismaUser | null> {
+    return await prisma.user.delete({ where: { id } });
   }
 
-  async findAll(page: number = 1, limit: number = 10): Promise<IUser[]> {
+  async findAll(page: number = 1, limit: number = 10): Promise<PrismaUser[]> {
     const skip = (page - 1) * limit;
-    return await User.find({}).skip(skip).limit(limit);
+    return await prisma.user.findMany({
+      skip,
+      take: limit,
+    });
   }
 
   async updateOnlineStatus(
     id: string,
     isOnline: boolean
-  ): Promise<IUser | null> {
-    return await User.findByIdAndUpdate(
-      id,
-      { isOnline, lastSeen: new Date() },
-      { new: true }
-    );
+  ): Promise<PrismaUser | null> {
+    return await prisma.user.update({
+      where: { id },
+      data: { isOnline, lastSeen: new Date() },
+    });
   }
 }
