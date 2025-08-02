@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { UserService } from "../services/UserService";
+import { UserService } from "../services/user.service";
 import { ApiResponse, AuthRequest } from "../types";
 
 export class UserController {

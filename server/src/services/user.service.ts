@@ -1,4 +1,4 @@
-import { UserRepository } from "../repositories/UserRepository";
+import { UserRepository } from "../repositories/user.repository";
 import { IUser } from "../types";
 
 export class UserService {

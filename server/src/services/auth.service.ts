@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { UserRepository } from "../repositories/UserRepository";
+import { UserRepository } from "../repositories/user.repository";
 import { config } from "../config/config";
 import { IUser } from "../types";
 import { encrypt } from "../utils/encryption";

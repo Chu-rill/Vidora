@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { AuthController } from "../controllers/AuthController";
+import { AuthController } from "../controllers/auth.controller";
 import {
   registerValidation,
   loginValidation,
-} from "../validation/authValidation";
+} from "../validation/user.validation";
 import { zodValidate } from "../middleware/zodValidate";
 import { authenticate } from "../middleware/auth";
 

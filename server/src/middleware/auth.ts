@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { AuthService } from "../services/AuthService";
-import { UserService } from "../services/UserService";
+import { AuthService } from "../services/auth.service";
+import { UserService } from "../services/user.service";
 import { ApiResponse } from "../types";
 
 const authService = new AuthService();

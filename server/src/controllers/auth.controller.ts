@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { validationResult } from "express-validator";
-import { AuthService } from "../services/AuthService";
+import { AuthService } from "../services/auth.service";
 import { ApiResponse } from "../types";
 
 export class AuthController {

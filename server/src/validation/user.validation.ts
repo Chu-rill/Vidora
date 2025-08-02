@@ -1,5 +1,20 @@
 import { z } from "zod";
 
+// Zod validation for Prisma User model
+export const userValidation = z.object({
+  id: z.string().cuid(),
+  username: z.string(),
+  email: z.string().email(),
+  password: z.string(),
+  avatar: z.string().nullable().optional(),
+  isOnline: z.boolean().optional(),
+  lastSeen: z.date().optional(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+});
+
+export type User = z.infer<typeof userValidation>;
+
 // deleteUserValidation validator schema
 export const loginValidation = z.object({
   id: z.string().cuid(),

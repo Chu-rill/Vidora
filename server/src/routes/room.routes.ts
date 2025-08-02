@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { RoomController } from "../controllers/RoomController";
-import { createRoomValidation } from "../validation/authValidation";
+import { RoomController } from "../controllers/room.controller";
+import { createRoomValidation } from "../validation/user.validation";
 import { authenticate } from "../middleware/auth";
 import { zodValidate } from "../middleware/zodValidate";
 
