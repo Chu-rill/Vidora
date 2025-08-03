@@ -2,7 +2,7 @@ import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { config } from "./config";
 import { User } from "../models/User";
-import { AuthService } from "../services/auth.service";
+import { AuthService } from "../auth/auth.service";
 
 const authService = new AuthService();
 

@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { RoomController } from "../controllers/room.controller";
-import { createRoomValidation } from "../validation/user.validation";
+import { RoomController } from "./room.controller";
+import { createRoom } from "./room.validation";
 import { authenticate } from "../middleware/auth";
 import { zodValidate } from "../middleware/zodValidate";
 
@@ -10,7 +10,7 @@ const roomController = new RoomController();
 router.post(
   "/",
   authenticate,
-  zodValidate(createRoomValidation),
+  zodValidate(createRoom),
   roomController.createRoom
 );
 router.get("/", authenticate, roomController.getAllRooms);

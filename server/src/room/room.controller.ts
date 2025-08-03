@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { validationResult } from "express-validator";
-import { RoomService } from "../services/room.service";
+import { RoomService } from "./room.service";
 import { ApiResponse } from "../types";
 
 export class RoomController {

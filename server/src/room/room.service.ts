@@ -1,4 +1,4 @@
-import { RoomRepository } from "../repositories/room.repository";
+import { RoomRepository } from "./room.repository";
 import { IRoom } from "../types";
 
 export class RoomService {

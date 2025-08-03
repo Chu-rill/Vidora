@@ -1,6 +1,6 @@
 import { User } from "../../generated/prisma";
-import { UserRepository } from "../repositories/user.repository";
-import { updateUserDto } from "../validation/user.validation";
+import { UserRepository } from "./user.repository";
+import { updateUserDto } from "./user.validation";
 
 export class UserService {
   private userRepository: UserRepository;

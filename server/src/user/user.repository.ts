@@ -3,7 +3,7 @@ import {
   PrismaClient,
   User as PrismaUser,
 } from "../../generated/prisma";
-import { createUserDto, updateUserDto } from "../validation/user.validation";
+import { createUserDto, updateUserDto } from "./user.validation";
 
 const prisma = new PrismaClient();
 
