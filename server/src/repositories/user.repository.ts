@@ -1,11 +1,15 @@
-import { PrismaClient, User as PrismaUser } from "../../generated/prisma";
-import { IUser } from "../types";
+import {
+  Prisma,
+  PrismaClient,
+  User as PrismaUser,
+} from "../../generated/prisma";
+import { createUserDto, updateUserDto } from "../validation/user.validation";
 
 const prisma = new PrismaClient();
 
 export class UserRepository {
-  async create(userData: Partial<IUser>): Promise<PrismaUser> {
-    return await prisma.user.create({ data: userData as any });
+  async create(userData: Partial<createUserDto>): Promise<PrismaUser> {
+    return await prisma.user.create({ data: userData as createUserDto });
   }
 
   async findById(id: string): Promise<PrismaUser | null> {
@@ -22,7 +26,7 @@ export class UserRepository {
 
   async updateById(
     id: string,
-    updateData: Partial<IUser>
+    updateData: updateUserDto
   ): Promise<PrismaUser | null> {
     return await prisma.user.update({
       where: { id },

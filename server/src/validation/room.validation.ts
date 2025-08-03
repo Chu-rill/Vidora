@@ -14,3 +14,9 @@ export const roomValidation = z.object({
 });
 
 export type RoomValidationType = z.infer<typeof roomValidation>;
+
+export const createRoom = z.object({
+  id: z.string().cuid(),
+  name: z.string().min(1),
+  description: z.string().optional(),
+});
