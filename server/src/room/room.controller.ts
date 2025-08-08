@@ -1,140 +1,70 @@
-import { Request, Response } from "express";
-import { validationResult } from "express-validator";
-import { RoomService } from "./room.service";
-import { ApiResponse } from "../types";
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
+import { RoomService } from './room.service';
+import { CreateRoomDto, GetRoomsQueryDto } from './dto/room.dto';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 
+@Controller('rooms')
+@UseGuards(JwtAuthGuard)
 export class RoomController {
-  private roomService: RoomService;
+  constructor(private roomService: RoomService) {}
 
-  constructor() {
-    this.roomService = new RoomService();
+  @Post()
+  async createRoom(@Body() createRoomDto: CreateRoomDto, @Request() req) {
+    const room = await this.roomService.createRoom(createRoomDto, req.user.id);
+    return {
+      success: true,
+      message: 'Room created successfully',
+      data: room,
+    };
   }
 
-  createRoom = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        res.status(400).json({
-          success: false,
-          message: "Validation failed",
-          error: errors.array()[0].msg,
-        } as ApiResponse);
-        return;
-      }
+  @Get()
+  async getAllRooms(@Query() query: GetRoomsQueryDto) {
+    const result = await this.roomService.getAllRooms(query.page, query.limit);
+    return {
+      success: true,
+      message: 'Rooms retrieved successfully',
+      data: result,
+    };
+  }
 
-      const { name, description, type, maxParticipants } = req.body;
-      const creator = req.user?.id;
+  @Get(':id')
+  async getRoomById(@Param('id') id: string) {
+    const room = await this.roomService.getRoomById(id);
+    return {
+      success: true,
+      message: 'Room retrieved successfully',
+      data: room,
+    };
+  }
 
-      const room = await this.roomService.createRoom({
-        name,
-        description,
-        type,
-        creator,
-        maxParticipants,
-        participants: [creator!],
-      });
+  @Put(':id/join')
+  async joinRoom(@Param('id') id: string, @Request() req) {
+    const room = await this.roomService.joinRoom(id, req.user.id);
+    return {
+      success: true,
+      message: 'Joined room successfully',
+      data: room,
+    };
+  }
 
-      res.status(201).json({
-        success: true,
-        message: "Room created successfully",
-        data: room,
-      } as ApiResponse);
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: "Failed to create room",
-        error: (error as Error).message,
-      } as ApiResponse);
-    }
-  };
-
-  getAllRooms = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
-
-      const rooms = await this.roomService.getAllRooms(page, limit);
-
-      res.json({
-        success: true,
-        message: "Rooms retrieved successfully",
-        data: rooms,
-      } as ApiResponse);
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: "Failed to get rooms",
-        error: (error as Error).message,
-      } as ApiResponse);
-    }
-  };
-
-  getRoomById = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { id } = req.params;
-      const room = await this.roomService.getRoomById(id);
-
-      if (!room) {
-        res.status(404).json({
-          success: false,
-          message: "Room not found",
-        } as ApiResponse);
-        return;
-      }
-
-      res.json({
-        success: true,
-        message: "Room retrieved successfully",
-        data: room,
-      } as ApiResponse);
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: "Failed to get room",
-        error: (error as Error).message,
-      } as ApiResponse);
-    }
-  };
-
-  joinRoom = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { id } = req.params;
-      const userId = req.user?.id;
-
-      const room = await this.roomService.joinRoom(id, userId!);
-
-      res.json({
-        success: true,
-        message: "Joined room successfully",
-        data: room,
-      } as ApiResponse);
-    } catch (error) {
-      res.status(400).json({
-        success: false,
-        message: "Failed to join room",
-        error: (error as Error).message,
-      } as ApiResponse);
-    }
-  };
-
-  leaveRoom = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { id } = req.params;
-      const userId = req.user?.id;
-
-      const room = await this.roomService.leaveRoom(id, userId!);
-
-      res.json({
-        success: true,
-        message: "Left room successfully",
-        data: room,
-      } as ApiResponse);
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: "Failed to leave room",
-        error: (error as Error).message,
-      } as ApiResponse);
-    }
-  };
+  @Put(':id/leave')
+  async leaveRoom(@Param('id') id: string, @Request() req) {
+    const room = await this.roomService.leaveRoom(id, req.user.id);
+    return {
+      success: true,
+      message: 'Left room successfully',
+      data: room,
+    };
+  }
 }

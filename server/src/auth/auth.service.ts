@@ -1,97 +1,137 @@
-import jwt from "jsonwebtoken";
-import { UserRepository } from "../user/user.repository";
-import { config } from "../config/config";
-import { IUser } from "../types";
-import { encrypt } from "../utils/encryption";
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import * as bcrypt from 'bcryptjs';
+import { PrismaService } from '../prisma/prisma.service';
+import { RegisterDto, LoginDto } from './dto/auth.dto';
+import { JwtPayload } from '../strategies/jwt.strategy';
 
+@Injectable()
 export class AuthService {
-  private userRepository: UserRepository;
+  constructor(
+    private prisma: PrismaService,
+    private jwtService: JwtService,
+    private configService: ConfigService,
+  ) {}
 
-  constructor() {
-    this.userRepository = new UserRepository();
-  }
+  async register(registerDto: RegisterDto) {
+    const { username, email, password } = registerDto;
 
-  async register(
-    username: string,
-    email: string,
-    password: string
-  ): Promise<{ user: IUser; token: string }> {
     // Check if user already exists
-    const existingUser = await this.userRepository.findByEmail(email);
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email }, { username }],
+      },
+    });
+
     if (existingUser) {
-      throw new Error("User already exists with this email");
+      if (existingUser.email === email) {
+        throw new ConflictException('User already exists with this email');
+      }
+      if (existingUser.username === username) {
+        throw new ConflictException('Username already taken');
+      }
     }
 
-    const existingUsername = await this.userRepository.findByUsername(username);
-    if (existingUsername) {
-      throw new Error("Username already taken");
-    }
-
-    const trimmedPassword = password.trim().toLowerCase();
-    const hashedPassword = await encrypt(trimmedPassword);
+    // Hash password
+    const saltRounds = this.configService.get<number>('bcrypt.rounds');
+    const hashedPassword = await bcrypt.hash(
+      password.trim().toLowerCase(),
+      saltRounds,
+    );
 
     // Create user
-    const user = await this.userRepository.create({
-      username,
-      email,
-      password: hashedPassword,
+    const user = await this.prisma.user.create({
+      data: {
+        username,
+        email,
+        password: hashedPassword,
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatar: true,
+        isOnline: true,
+        createdAt: true,
+      },
     });
 
     // Generate token
-    const token = this.generateToken(user._id);
+    const token = this.generateToken(user.id);
 
-    return { user, token };
+    return {
+      user,
+      token,
+    };
   }
 
-  async login(
-    email: string,
-    password: string
-  ): Promise<{ user: IUser; token: string }> {
+  async login(loginDto: LoginDto) {
+    const { email, password } = loginDto;
+
     // Find user
-    const user = await this.userRepository.findByEmail(email);
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
     if (!user) {
-      throw new Error("Invalid credentials");
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     // Check password
-    const isPasswordValid = await (user as any).comparePassword(password);
+    const isPasswordValid = await bcrypt.compare(
+      password.trim().toLowerCase(),
+      user.password,
+    );
+
     if (!isPasswordValid) {
-      throw new Error("Invalid credentials");
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     // Update online status
-    await this.userRepository.updateOnlineStatus(user._id, true);
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { isOnline: true },
+    });
 
     // Generate token
-    const token = this.generateToken(user._id);
+    const token = this.generateToken(user.id);
 
-    return { user, token };
+    const { password: _, ...userWithoutPassword } = user;
+
+    return {
+      user: userWithoutPassword,
+      token,
+    };
   }
 
-  async logout(userId: string): Promise<void> {
-    await this.userRepository.updateOnlineStatus(userId, false);
+  async logout(userId: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { isOnline: false },
+    });
   }
 
   private generateToken(userId: string): string {
-    // Ensure JWT_SECRET exists and is a string
-    const secret = config.JWT_SECRET;
-    if (!secret) {
-      throw new Error("JWT_SECRET is not configured");
-    }
-
-    // Handle expiresIn - ensure it's a valid type
-    const expiresIn = config.JWT_EXPIRE;
-    let tokenOptions: jwt.SignOptions = {};
-
-    return jwt.sign({ userId }, secret, tokenOptions);
+    const payload: JwtPayload = { userId };
+    return this.jwtService.sign(payload);
   }
 
-  verifyToken(token: string): jwt.JwtPayload | string {
-    const secret = config.JWT_SECRET;
-    if (!secret) {
-      throw new Error("JWT_SECRET is not configured");
-    }
-
-    return jwt.verify(token, secret);
+  async validateUser(userId: string) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatar: true,
+        isOnline: true,
+      },
+    });
   }
 }
