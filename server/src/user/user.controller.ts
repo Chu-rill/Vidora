@@ -8,8 +8,8 @@ import {
   Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { UpdateUserDto, GetUsersQueryDto } from './dto/user.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { GetUsersQueryDto, UpdateUserDto } from './validation';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)

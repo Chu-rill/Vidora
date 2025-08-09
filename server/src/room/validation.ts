@@ -1,11 +1,11 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // Zod validation for Prisma Room model
-export const roomValidation = z.object({
+export const RoomSchema = z.object({
   id: z.string().cuid(),
   name: z.string(),
   description: z.string().nullable().optional(),
-  type: z.enum(["PUBLIC", "PRIVATE"]).optional(),
+  type: z.enum(['PUBLIC', 'PRIVATE']).optional(),
   creatorId: z.string(),
   maxParticipants: z.number().int().optional(),
   isActive: z.boolean().optional(),
@@ -13,10 +13,12 @@ export const roomValidation = z.object({
   updatedAt: z.date().optional(),
 });
 
-export type RoomValidationType = z.infer<typeof roomValidation>;
+export type Room = z.infer<typeof RoomSchema>;
 
-export const createRoom = z.object({
+export const CreateRoom = z.object({
   id: z.string().cuid(),
   name: z.string().min(1),
   description: z.string().optional(),
 });
+
+export type CreateRoom = z.infer<typeof CreateRoom>;

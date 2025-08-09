@@ -1,24 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { UpdateUserDto } from './dto/user.dto';
+import { UpdateUserDto } from './validation';
+import { UserRepository } from './user.repository';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private userRepository: UserRepository) {}
 
   async getUserById(id: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        avatar: true,
-        isOnline: true,
-        lastSeen: true,
-        createdAt: true,
-      },
-    });
+    const user = await this.userRepository.getUserById(id);
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -29,19 +18,7 @@ export class UserService {
 
   async updateUser(id: string, updateData: UpdateUserDto) {
     try {
-      const user = await this.prisma.user.update({
-        where: { id },
-        data: updateData,
-        select: {
-          id: true,
-          username: true,
-          email: true,
-          avatar: true,
-          isOnline: true,
-          lastSeen: true,
-          updatedAt: true,
-        },
-      });
+      const user = await this.userRepository.updateUser(id, updateData);
 
       return user;
     } catch (error) {
@@ -50,27 +27,7 @@ export class UserService {
   }
 
   async getAllUsers(page: number = 1, limit: number = 10) {
-    const skip = (page - 1) * limit;
-
-    const [users, total] = await Promise.all([
-      this.prisma.user.findMany({
-        skip,
-        take: limit,
-        select: {
-          id: true,
-          username: true,
-          email: true,
-          avatar: true,
-          isOnline: true,
-          lastSeen: true,
-          createdAt: true,
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      }),
-      this.prisma.user.count(),
-    ]);
+    const { users, total } = await this.userRepository.getAllUsers(page, limit);
 
     return {
       users,
@@ -84,12 +41,6 @@ export class UserService {
   }
 
   async updateOnlineStatus(id: string, isOnline: boolean) {
-    return this.prisma.user.update({
-      where: { id },
-      data: {
-        isOnline,
-        lastSeen: new Date(),
-      },
-    });
+    return this.userRepository.updateUser(id, { isOnline });
   }
 }
