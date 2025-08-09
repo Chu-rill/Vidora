@@ -1,37 +1,62 @@
-import { User } from "../../generated/prisma";
-import { UserRepository } from "./user.repository";
-import { updateUserDto } from "./user.validation";
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { UpdateUserDto } from './validation';
+import { UserRepository } from './user.repository';
+import { success } from 'zod';
 
+@Injectable()
 export class UserService {
-  private userRepository: UserRepository;
+  constructor(private userRepository: UserRepository) {}
 
-  constructor() {
-    this.userRepository = new UserRepository();
+  async getUserById(id: string) {
+    const user = await this.userRepository.getUserById(id);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'User retrieved successfully',
+      data: user,
+    };
   }
 
-  async getUserById(id: string): Promise<User | null> {
-    return await this.userRepository.findById(id);
+  async updateUser(id: string, updateData: UpdateUserDto) {
+    try {
+      const user = await this.userRepository.updateUser(id, updateData);
+
+      return {
+        statusCode: HttpStatus.OK,
+        success: true,
+        message: 'Profile updated successfully',
+        data: user,
+      };
+    } catch (error) {
+      throw new NotFoundException('User not found');
+    }
   }
 
-  async updateUser(
-    id: string,
-    updateData: updateUserDto
-  ): Promise<User | null> {
-    return await this.userRepository.updateById(id, updateData);
+  async getAllUsers(page: number = 1, limit: number = 10) {
+    const { users, total } = await this.userRepository.getAllUsers(page, limit);
+
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Users retrieved successfully',
+      data: {
+        users,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+        },
+      },
+    };
   }
 
-  async getAllUsers(page: number = 1, limit: number = 10): Promise<User[]> {
-    return await this.userRepository.findAll(page, limit);
-  }
-
-  async deleteUser(id: string): Promise<User | null> {
-    return await this.userRepository.deleteById(id);
-  }
-
-  async updateOnlineStatus(
-    id: string,
-    isOnline: boolean
-  ): Promise<User | null> {
-    return await this.userRepository.updateOnlineStatus(id, isOnline);
+  async updateOnlineStatus(id: string, isOnline: boolean) {
+    return this.userRepository.updateUser(id, { isOnline });
   }
 }

@@ -1,54 +1,111 @@
-import { RoomRepository } from "./room.repository";
-import { IRoom } from "../types";
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  HttpStatus,
+} from '@nestjs/common';
+import { RoomRepository } from './room.repository';
+import { Room } from './validation';
 
+@Injectable()
 export class RoomService {
-  private roomRepository: RoomRepository;
+  constructor(private roomRepository: RoomRepository) {}
 
-  constructor() {
-    this.roomRepository = new RoomRepository();
+  async createRoom(createRoomDto: Room, creatorId: string) {
+    const { name, description, type, maxParticipants } = createRoomDto;
+
+    const room = await this.roomRepository.createRoom(
+      name,
+      description!,
+      type!,
+      maxParticipants!,
+      creatorId,
+    );
+
+    return {
+      statusCode: HttpStatus.CREATED,
+      success: true,
+      message: 'Room created successfully',
+      data: room,
+    };
   }
 
-  async createRoom(roomData: Partial<IRoom>): Promise<IRoom> {
-    return await this.roomRepository.create(roomData);
+  async getAllRooms(page: number = 1, limit: number = 10) {
+    const { rooms, total } = await this.roomRepository.getAllRooms(page, limit);
+
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Room retrieved successfully',
+      data: {
+        rooms,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+        },
+      },
+    };
   }
 
-  async getRoomById(id: string): Promise<IRoom | null> {
-    return await this.roomRepository.findById(id);
-  }
+  async getRoomById(id: string) {
+    const room = await this.roomRepository.getRoomById(id);
 
-  async getAllRooms(page: number = 1, limit: number = 10): Promise<IRoom[]> {
-    return await this.roomRepository.findAll(page, limit);
-  }
-
-  async getRoomsByCreator(creatorId: string): Promise<IRoom[]> {
-    return await this.roomRepository.findByCreator(creatorId);
-  }
-
-  async updateRoom(
-    id: string,
-    updateData: Partial<IRoom>
-  ): Promise<IRoom | null> {
-    return await this.roomRepository.updateById(id, updateData);
-  }
-
-  async deleteRoom(id: string): Promise<IRoom | null> {
-    return await this.roomRepository.deleteById(id);
-  }
-
-  async joinRoom(roomId: string, userId: string): Promise<IRoom | null> {
-    const room = await this.roomRepository.findById(roomId);
     if (!room) {
-      throw new Error("Room not found");
+      throw new NotFoundException('Room not found');
+    }
+
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Room retrieved successfully',
+      data: room,
+    };
+  }
+
+  async joinRoom(roomId: string, userId: string) {
+    const room = await this.roomRepository.getRoomById(roomId);
+
+    if (!room) {
+      throw new NotFoundException('Room not found');
     }
 
     if (room.participants.length >= room.maxParticipants) {
-      throw new Error("Room is full");
+      throw new BadRequestException('Room is full');
     }
 
-    return await this.roomRepository.addParticipant(roomId, userId);
+    const newMember = await this.roomRepository.joinRoom(roomId, userId);
+
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Joined room successfully',
+      data: newMember,
+    };
   }
 
-  async leaveRoom(roomId: string, userId: string): Promise<IRoom | null> {
-    return await this.roomRepository.removeParticipant(roomId, userId);
+  async leaveRoom(roomId: string, userId: string) {
+    const room = await this.roomRepository.getRoomById(roomId);
+
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
+    const isParticipant = room.participants.some(
+      (participant) => participant.id === userId,
+    );
+
+    if (!isParticipant) {
+      throw new BadRequestException('You are not a participant of this room');
+    }
+
+    const oldMember = await this.roomRepository.leaveRoom(roomId, userId);
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Left room successfully',
+      data: oldMember,
+    };
   }
 }

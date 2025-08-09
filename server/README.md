@@ -1,105 +1,98 @@
-# Vidora Backend
+<p align="center">
+  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+</p>
 
-A robust Express.js backend for a video chat application built with TypeScript, MongoDB, and Socket.IO.
+[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
+[circleci-url]: https://circleci.com/gh/nestjs/nest
 
-## Features
+  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
+    <p align="center">
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
+<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
+<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
+<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
+<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
+  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
+    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
+  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+</p>
+  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
+  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-- **Authentication**: JWT-based authentication with bcrypt password hashing
-- **User Management**: User registration, login, profile management
-- **Room Management**: Create, join, leave video chat rooms
-- **Real-time Communication**: Socket.IO integration for real-time features
-- **Security**: Helmet, CORS, rate limiting, input validation
-- **Architecture**: Clean layered architecture (Routes → Controllers → Services → Repositories)
-- **Database**: MongoDB with Mongoose ODM
-- **TypeScript**: Full TypeScript support for type safety
+## Description
 
-## Architecture
+[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Project setup
+
+```bash
+$ npm install
 ```
-src/
-├── config/          # Configuration files
-├── controllers/     # Request handlers
-├── middleware/      # Custom middleware
-├── models/         # Database models
-├── repositories/   # Database access layer
-├── routes/         # Route definitions
-├── services/       # Business logic layer
-├── types/          # TypeScript type definitions
-└── server.ts       # Application entry point
+
+## Compile and run the project
+
+```bash
+# development
+$ npm run start
+
+# watch mode
+$ npm run start:dev
+
+# production mode
+$ npm run start:prod
 ```
 
-## Installation
+## Run tests
 
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Copy `.env.example` to `.env` and configure your environment variables
-4. Build the project: `npm run build`
-5. Start the server: `npm start` (or `npm run dev` for development)
+```bash
+# unit tests
+$ npm run test
 
-## API Endpoints
+# e2e tests
+$ npm run test:e2e
 
-### Authentication
+# test coverage
+$ npm run test:cov
+```
 
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login user
-- `POST /api/auth/logout` - Logout user
-- `GET /api/auth/google` - Start Google OAuth
-- `GET /api/auth/google/callback` - Handle OAuth callback
+## Deployment
 
-### Users
+When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
 
-- `GET /api/users/profile` - Get user profile
-- `PUT /api/users/profile` - Update user profile
-- `GET /api/users` - Get all users (paginated)
+If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
 
-### Rooms
+```bash
+$ npm install -g @nestjs/mau
+$ mau deploy
+```
 
-- `POST /api/rooms` - Create a new room
-- `GET /api/rooms` - Get all rooms (paginated)
-- `GET /api/rooms/:id` - Get room by ID
-- `POST /api/rooms/:id/join` - Join a room
-- `POST /api/rooms/:id/leave` - Leave a room
+With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
 
-## Environment Variables
+## Resources
 
-- `PORT` - Server port (default: 5000)
-- `MONGODB_URI` - MongoDB connection string
-- `JWT_SECRET` - JWT signing secret
-- `JWT_EXPIRE` - JWT expiration time (default: 7d)
-- `BCRYPT_ROUNDS` - Bcrypt salt rounds (default: 12)
-- `FRONTEND_URL` - Frontend URL for CORS
-- `NODE_ENV` - Environment (development/production)
+Check out a few resources that may come in handy when working with NestJS:
 
-## Security Features
+- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
+- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
+- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
+- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
+- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
+- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
+- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
+- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
 
-- Password hashing with bcrypt
-- JWT authentication
-- Request rate limiting
-- CORS protection
-- Helmet security headers
-- Input validation and sanitization
-- Error handling middleware
+## Support
 
-## Development
+Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
 
-- Run in development mode: `npm run dev`
-- Build for production: `npm run build`
-- Run tests: `npm test`
+## Stay in touch
 
-## Socket.IO Integration
+- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
+- Website - [https://nestjs.com](https://nestjs.com/)
+- Twitter - [@nestframework](https://twitter.com/nestframework)
 
-The server includes Socket.IO setup for real-time communication. The video call logic can be implemented in the Socket.IO connection handler in `server.ts`.
+## License
 
-## Database Models
-
-### User Model
-
-- username, email, password
-- avatar, online status, last seen
-- Password hashing and comparison methods
-
-### Room Model
-
-- name, description, type (public/private)
-- creator, participants, max participants
-- active status and timestamps
+Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).

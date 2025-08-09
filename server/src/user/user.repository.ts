@@ -1,58 +1,124 @@
-import {
-  Prisma,
-  PrismaClient,
-  User as PrismaUser,
-} from "../../generated/prisma";
-import { createUserDto, updateUserDto } from "./user.validation";
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 
-const prisma = new PrismaClient();
-
+@Injectable()
 export class UserRepository {
-  async create(userData: Partial<createUserDto>): Promise<PrismaUser> {
-    return await prisma.user.create({ data: userData as createUserDto });
-  }
+  constructor(private prisma: PrismaService) {}
 
-  async findById(id: string): Promise<PrismaUser | null> {
-    return await prisma.user.findUnique({ where: { id } });
-  }
-
-  async findByEmail(email: string): Promise<PrismaUser | null> {
-    return await prisma.user.findUnique({ where: { email } });
-  }
-
-  async findByUsername(username: string): Promise<PrismaUser | null> {
-    return await prisma.user.findUnique({ where: { username } });
-  }
-
-  async updateById(
-    id: string,
-    updateData: updateUserDto
-  ): Promise<PrismaUser | null> {
-    return await prisma.user.update({
-      where: { id },
-      data: updateData as any,
+  async createUser(username: string, email: string, password: string) {
+    const user = await this.prisma.user.create({
+      data: {
+        username,
+        email,
+        password,
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatar: true,
+        isOnline: true,
+        createdAt: true,
+      },
     });
+    return user;
   }
 
-  async deleteById(id: string): Promise<PrismaUser | null> {
-    return await prisma.user.delete({ where: { id } });
+  async getUserById(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatar: true,
+        isOnline: true,
+        lastSeen: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
   }
 
-  async findAll(page: number = 1, limit: number = 10): Promise<PrismaUser[]> {
+  async getUserByEmail(email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatar: true,
+        isOnline: true,
+        lastSeen: true,
+        createdAt: true,
+      },
+    });
+    return user;
+  }
+
+  async getUserByUsername(username: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatar: true,
+        isOnline: true,
+        lastSeen: true,
+        createdAt: true,
+      },
+    });
+    return user;
+  }
+
+  async updateUser(id: string, updateData: any) {
+    try {
+      const user = await this.prisma.user.update({
+        where: { id },
+        data: updateData,
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          avatar: true,
+          isOnline: true,
+          lastSeen: true,
+          updatedAt: true,
+        },
+      });
+
+      return user;
+    } catch (error) {
+      throw new NotFoundException('User not found');
+    }
+  }
+
+  async getAllUsers(page: number = 1, limit: number = 10) {
     const skip = (page - 1) * limit;
-    return await prisma.user.findMany({
-      skip,
-      take: limit,
-    });
-  }
 
-  async updateOnlineStatus(
-    id: string,
-    isOnline: boolean
-  ): Promise<PrismaUser | null> {
-    return await prisma.user.update({
-      where: { id },
-      data: { isOnline, lastSeen: new Date() },
-    });
+    const [users, total] = await Promise.all([
+      this.prisma.user.findMany({
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          avatar: true,
+          isOnline: true,
+          lastSeen: true,
+          createdAt: true,
+        },
+      }),
+      this.prisma.user.count(),
+    ]);
+
+    return { users, total };
   }
 }

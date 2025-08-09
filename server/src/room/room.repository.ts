@@ -1,110 +1,154 @@
 import {
-  PrismaClient,
-  Room as PrismaRoom,
-  User as PrismaUser,
-} from "../../generated/prisma";
-import { IRoom } from "../types";
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 
-const prisma = new PrismaClient();
-
+@Injectable()
 export class RoomRepository {
-  async create(roomData: Partial<IRoom>): Promise<PrismaRoom> {
-    // Assume roomData.creator is the creatorId and participants is an array of user IDs
-    const { creator, participants, ...rest } = roomData as any;
-    return await prisma.room.create({
+  constructor(private prisma: PrismaService) {}
+
+  async createRoom(
+    name: string,
+    description: string,
+    type: string,
+    maxParticipants: number,
+    creatorId: string,
+  ) {
+    const room = await this.prisma.room.create({
       data: {
-        ...rest,
-        creator: { connect: { id: creator } },
-        participants: participants
-          ? { connect: participants.map((id: string) => ({ id })) }
-          : undefined,
+        name,
+        description,
+        type,
+        creatorId,
+        maxParticipants,
+        participants: {
+          connect: { id: creatorId },
+        },
       },
-    });
-  }
-
-  async findById(
-    id: string
-  ): Promise<
-    | (PrismaRoom & {
-        creator: { username: string; email: string };
-        participants: PrismaUser[];
-      })
-    | null
-  > {
-    return await prisma.room.findUnique({
-      where: { id },
       include: {
-        creator: { select: { username: true, email: true } },
-        participants: true,
+        participants: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            avatar: true,
+          },
+        },
+        creator: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            avatar: true,
+          },
+        },
       },
     });
+
+    return room;
   }
 
-  async findAll(page: number = 1, limit: number = 10): Promise<PrismaRoom[]> {
+  async getAllRooms(page: number = 1, limit: number = 10) {
     const skip = (page - 1) * limit;
-    return await prisma.room.findMany({
-      where: { isActive: true },
-      skip,
-      take: limit,
+
+    const [rooms, total] = await Promise.all([
+      this.prisma.room.findMany({
+        skip,
+        take: limit,
+        include: {
+          participants: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+              avatar: true,
+            },
+          },
+          creator: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+              avatar: true,
+            },
+          },
+        },
+      }),
+      this.prisma.room.count(),
+    ]);
+
+    return { rooms, total };
+  }
+
+  async getRoomById(id: string) {
+    const room = await this.prisma.room.findUnique({
+      where: { id },
       include: {
-        creator: { select: { username: true, email: true } },
-        participants: true,
+        participants: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            avatar: true,
+          },
+        },
+        creator: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            avatar: true,
+          },
+        },
       },
     });
+    return room;
   }
 
-  async findByCreator(creatorId: string): Promise<PrismaRoom[]> {
-    return await prisma.room.findMany({
-      where: { creatorId, isActive: true },
-      include: { participants: true },
-    });
-  }
-
-  async updateById(
-    id: string,
-    updateData: Partial<IRoom>
-  ): Promise<PrismaRoom | null> {
-    const { participants, ...rest } = updateData as any;
-    return await prisma.room.update({
-      where: { id },
-      data: {
-        ...rest,
-        ...(participants && {
-          participants: { set: participants.map((id: string) => ({ id })) },
-        }),
-      },
-    });
-  }
-
-  async deleteById(id: string): Promise<PrismaRoom | null> {
-    // Soft delete: set isActive to false
-    return await prisma.room.update({
-      where: { id },
-      data: { isActive: false },
-    });
-  }
-
-  async addParticipant(
-    roomId: string,
-    userId: string
-  ): Promise<PrismaRoom | null> {
-    return await prisma.room.update({
+  async joinRoom(roomId: string, userId: string) {
+    const room = await this.prisma.room.update({
       where: { id: roomId },
       data: {
-        participants: { connect: { id: userId } },
+        participants: {
+          connect: { id: userId },
+        },
+      },
+      include: {
+        participants: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            avatar: true,
+          },
+        },
       },
     });
+
+    return room;
   }
 
-  async removeParticipant(
-    roomId: string,
-    userId: string
-  ): Promise<PrismaRoom | null> {
-    return await prisma.room.update({
+  async leaveRoom(roomId: string, userId: string) {
+    const room = await this.prisma.room.update({
       where: { id: roomId },
       data: {
-        participants: { disconnect: { id: userId } },
+        participants: {
+          disconnect: { id: userId },
+        },
+      },
+      include: {
+        participants: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            avatar: true,
+          },
+        },
       },
     });
+    return room;
   }
 }
