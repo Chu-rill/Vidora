@@ -18,31 +18,16 @@ export class UserController {
 
   @Get('profile')
   async getProfile(@Request() req) {
-    const user = await this.userService.getUserById(req.user.id);
-    return {
-      success: true,
-      message: 'Profile retrieved successfully',
-      data: user,
-    };
+    return this.userService.getUserById(req.user.id);
   }
 
   @Put('profile')
   async updateProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
-    const user = await this.userService.updateUser(req.user.id, updateUserDto);
-    return {
-      success: true,
-      message: 'Profile updated successfully',
-      data: user,
-    };
+    return this.userService.updateUser(req.user.id, updateUserDto);
   }
 
   @Get()
   async getAllUsers(@Query() query: GetUsersQueryDto) {
-    const result = await this.userService.getAllUsers(query.page, query.limit);
-    return {
-      success: true,
-      message: 'Users retrieved successfully',
-      data: result,
-    };
+    return this.userService.getAllUsers(query.page, query.limit);
   }
 }

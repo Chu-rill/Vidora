@@ -9,9 +9,13 @@ import { PrismaService } from '../prisma/prisma.service';
 export class RoomRepository {
   constructor(private prisma: PrismaService) {}
 
-  async createRoom(createRoomDto: any, creatorId: string) {
-    const { name, description, type, maxParticipants } = createRoomDto;
-
+  async createRoom(
+    name: string,
+    description: string,
+    type: string,
+    maxParticipants: number,
+    creatorId: string,
+  ) {
     const room = await this.prisma.room.create({
       data: {
         name,
@@ -76,5 +80,75 @@ export class RoomRepository {
     ]);
 
     return { rooms, total };
+  }
+
+  async getRoomById(id: string) {
+    const room = await this.prisma.room.findUnique({
+      where: { id },
+      include: {
+        participants: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            avatar: true,
+          },
+        },
+        creator: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+    return room;
+  }
+
+  async joinRoom(roomId: string, userId: string) {
+    const room = await this.prisma.room.update({
+      where: { id: roomId },
+      data: {
+        participants: {
+          connect: { id: userId },
+        },
+      },
+      include: {
+        participants: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+
+    return room;
+  }
+
+  async leaveRoom(roomId: string, userId: string) {
+    const room = await this.prisma.room.update({
+      where: { id: roomId },
+      data: {
+        participants: {
+          disconnect: { id: userId },
+        },
+      },
+      include: {
+        participants: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+    return room;
   }
 }

@@ -12,8 +12,8 @@ export class ZodPipe implements PipeTransform<any> {
     } catch (err) {
       if (err instanceof ZodError) {
         const errorMessages: string[] = [];
-        for (let i = 0; i < err.errors.length; i++) {
-          errorMessages.push(err.errors[i].message);
+        for (let i = 0; i < err.issues.length; i++) {
+          errorMessages.push(err.issues[i].message);
         }
         throw new BadRequestException(errorMessages);
       }
