@@ -5,6 +5,25 @@ import { PrismaService } from '../prisma/prisma.service';
 export class UserRepository {
   constructor(private prisma: PrismaService) {}
 
+  async createUser(username: string, email: string, password: string) {
+    const user = await this.prisma.user.create({
+      data: {
+        username,
+        email,
+        password,
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatar: true,
+        isOnline: true,
+        createdAt: true,
+      },
+    });
+    return user;
+  }
+
   async getUserById(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },
@@ -23,6 +42,38 @@ export class UserRepository {
       throw new NotFoundException('User not found');
     }
 
+    return user;
+  }
+
+  async getUserByEmail(email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatar: true,
+        isOnline: true,
+        lastSeen: true,
+        createdAt: true,
+      },
+    });
+    return user;
+  }
+
+  async getUserByUsername(username: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatar: true,
+        isOnline: true,
+        lastSeen: true,
+        createdAt: true,
+      },
+    });
     return user;
   }
 

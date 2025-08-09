@@ -10,7 +10,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { RoomService } from './room.service';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../guards/auth.guard';
 import { GetRoomsQueryDto, Room } from './validation';
 
 @Controller('rooms')

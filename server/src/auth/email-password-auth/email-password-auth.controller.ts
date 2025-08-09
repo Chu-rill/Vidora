@@ -8,16 +8,17 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { RegisterDto, LoginDto } from './dto/auth.dto';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { AuthService } from './email-password-auth.service';
+import { JwtAuthGuard } from '../../guards/auth.guard';
+import { SignupDto } from './validation';
+import { LoginDto } from 'src/user/validation';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
-  async register(@Body() registerDto: RegisterDto) {
+  async register(@Body() registerDto: SignupDto) {
     const result = await this.authService.register(registerDto);
     return {
       success: true,
