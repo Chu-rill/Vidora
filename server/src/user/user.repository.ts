@@ -24,6 +24,25 @@ export class UserRepository {
     return user;
   }
 
+  async createUserOauth(username: string, email: string, avatar: string) {
+    const user = await this.prisma.user.create({
+      data: {
+        username,
+        email,
+        avatar,
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatar: true,
+        isOnline: true,
+        createdAt: true,
+      },
+    });
+    return user;
+  }
+
   async getUserById(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },

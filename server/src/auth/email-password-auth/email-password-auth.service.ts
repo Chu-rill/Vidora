@@ -3,6 +3,7 @@ import {
   ConflictException,
   UnauthorizedException,
   BadRequestException,
+  HttpStatus,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -16,6 +17,8 @@ import {
 } from 'src/utils/helper-functions/encryption';
 import { use } from 'passport';
 import { UserService } from 'src/user/user.service';
+import { success } from 'zod';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class AuthService {
@@ -23,7 +26,7 @@ export class AuthService {
     private userRepository: UserRepository,
     private userService: UserService,
     private jwtService: JwtService,
-    private configService: ConfigService,
+    private mailService: EmailService,
   ) {}
 
   async register(registerDto: SignupDto) {
@@ -33,7 +36,7 @@ export class AuthService {
     const existingUser = await this.userRepository.getUserByEmail(email);
 
     if (existingUser) {
-      throw new ConflictException('User already exists ß');
+      throw new ConflictException('User already exists');
     }
 
     // Hash password
@@ -46,11 +49,20 @@ export class AuthService {
       hashedPassword,
     );
 
+    const data = {
+      subject: 'Vidora welcome email',
+      username: user.username,
+    };
+    await this.mailService.sendWelcomeEmail(user.email, data);
+
     // Generate token
     const token = this.generateToken(user.id);
 
     return {
-      user,
+      statusCode: HttpStatus.CREATED,
+      success: true,
+      message: 'User registered successfully',
+      data: user,
       token,
     };
   }
@@ -62,7 +74,7 @@ export class AuthService {
     const user = await this.userRepository.getUserByEmail(email);
 
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('User not found');
     }
 
     // Check password
@@ -84,17 +96,22 @@ export class AuthService {
     const { password: _, ...userWithoutPassword } = user;
 
     return {
-      user: userWithoutPassword,
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Login successful',
+      data: userWithoutPassword,
       token,
     };
   }
 
   async logout(userId: string) {
     await this.userService.updateOnlineStatus(userId, false);
-    // await this.prisma.user.update({
-    //   where: { id: userId },
-    //   data: { isOnline: false },
-    // });
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'User logged out successfully',
+      data: null,
+    };
   }
 
   private generateToken(userId: string): string {

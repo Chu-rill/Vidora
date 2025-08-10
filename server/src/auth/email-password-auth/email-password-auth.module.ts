@@ -4,10 +4,12 @@ import { AuthService } from './email-password-auth.service';
 import { AuthController } from './email-password-auth.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserModule } from 'src/user/user.module';
+import { EmailModule } from 'src/email/email.module';
 
 @Module({
   imports: [
     UserModule,
+    EmailModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

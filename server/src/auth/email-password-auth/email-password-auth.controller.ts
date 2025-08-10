@@ -12,50 +12,28 @@ import { AuthService } from './email-password-auth.service';
 import { JwtAuthGuard } from '../../guards/auth.guard';
 import { SignupDto } from './validation';
 import { LoginDto } from 'src/user/validation';
+import { UserService } from 'src/user/user.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
+  @HttpCode(HttpStatus.CREATED)
   async register(@Body() registerDto: SignupDto) {
-    const result = await this.authService.register(registerDto);
-    return {
-      success: true,
-      message: 'User registered successfully',
-      data: result,
-    };
+    return this.authService.register(registerDto);
   }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: LoginDto) {
-    const result = await this.authService.login(loginDto);
-    return {
-      success: true,
-      message: 'Login successful',
-      data: result,
-    };
+    return this.authService.login(loginDto);
   }
 
   @Post('logout')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async logout(@Request() req) {
-    await this.authService.logout(req.user.id);
-    return {
-      success: true,
-      message: 'Logout successful',
-    };
-  }
-
-  @Get('me')
-  @UseGuards(JwtAuthGuard)
-  async getProfile(@Request() req) {
-    return {
-      success: true,
-      message: 'Profile retrieved successfully',
-      data: req.user,
-    };
+    return this.authService.logout(req.user.id);
   }
 }

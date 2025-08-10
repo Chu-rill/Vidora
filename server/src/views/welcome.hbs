@@ -1,0 +1,454 @@
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>Welcome to {{appName}}</title>
+    <style>
+      /* Email client compatibility styles */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
+          Arial, sans-serif;
+        line-height: 1.6;
+        color: #e1e5e9;
+        background-color: #0d1117;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+      }
+
+      /* Container for email content */
+      .email-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Header section */
+      .header {
+        background: linear-gradient(
+          135deg,
+          #6366f1 0%,
+          #8b5cf6 50%,
+          #ec4899 100%
+        );
+        padding: 40px 30px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+        opacity: 0.3;
+        animation: float 20s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translate(0, 0) rotate(0deg);
+        }
+        50% {
+          transform: translate(-20px, -20px) rotate(1deg);
+        }
+      }
+
+      .logo-container {
+        position: relative;
+        z-index: 2;
+        margin-bottom: 20px;
+      }
+
+      .logo {
+        font-size: 48px;
+        font-weight: 800;
+        color: #ffffff;
+        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        letter-spacing: -1px;
+        display: inline-block;
+      }
+
+      .logo::before {
+        content: '📹';
+        margin-right: 12px;
+        font-size: 40px;
+        display: inline-block;
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.1);
+        }
+      }
+
+      .header-subtitle {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 18px;
+        font-weight: 500;
+        position: relative;
+        z-index: 2;
+      }
+
+      /* Main content */
+      .content {
+        padding: 50px 40px;
+        background: #161b22;
+        position: relative;
+      }
+
+      .greeting {
+        font-size: 32px;
+        font-weight: 700;
+        color: #f0f6fc;
+        margin-bottom: 20px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .welcome-message {
+        font-size: 18px;
+        color: #c9d1d9;
+        margin-bottom: 35px;
+        line-height: 1.7;
+      }
+
+      /* Feature highlights */
+      .features {
+        margin: 40px 0;
+      }
+
+      .feature-list {
+        list-style: none;
+        padding: 0;
+      }
+
+      .feature-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding: 16px 20px;
+        background: rgba(99, 102, 241, 0.1);
+        border-radius: 12px;
+        border-left: 4px solid #6366f1;
+        transition: all 0.3s ease;
+      }
+
+      .feature-item:hover {
+        background: rgba(99, 102, 241, 0.15);
+        transform: translateX(5px);
+      }
+
+      .feature-icon {
+        font-size: 24px;
+        margin-right: 16px;
+        width: 40px;
+        text-align: center;
+      }
+
+      .feature-text {
+        color: #e1e5e9;
+        font-size: 16px;
+        font-weight: 500;
+      }
+
+      /* CTA Button */
+      .cta-container {
+        text-align: center;
+        margin: 50px 0 40px 0;
+      }
+
+      .cta-button {
+        display: inline-block;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: #ffffff;
+        text-decoration: none;
+        padding: 18px 40px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 18px;
+        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .cta-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transition: left 0.5s;
+      }
+
+      .cta-button:hover::before {
+        left: 100%;
+      }
+
+      .cta-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 40px rgba(99, 102, 241, 0.6);
+      }
+
+      /* Stats/Info section */
+      .stats {
+        display: flex;
+        justify-content: space-around;
+        margin: 40px 0;
+        padding: 30px 20px;
+        background: linear-gradient(
+          135deg,
+          rgba(99, 102, 241, 0.1),
+          rgba(139, 92, 246, 0.1)
+        );
+        border-radius: 16px;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+      }
+
+      .stat-item {
+        text-align: center;
+        flex: 1;
+      }
+
+      .stat-number {
+        font-size: 28px;
+        font-weight: 800;
+        color: #6366f1;
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .stat-label {
+        font-size: 14px;
+        color: #8b949e;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      /* Footer */
+      .footer {
+        background: #0d1117;
+        padding: 40px 40px 30px 40px;
+        text-align: center;
+        border-top: 1px solid #21262d;
+      }
+
+      .footer-text {
+        color: #8b949e;
+        font-size: 14px;
+        margin-bottom: 20px;
+        line-height: 1.6;
+      }
+
+      .social-links {
+        margin-bottom: 25px;
+      }
+
+      .social-link {
+        display: inline-block;
+        margin: 0 15px;
+        color: #6366f1;
+        text-decoration: none;
+        font-size: 24px;
+        transition: all 0.3s ease;
+      }
+
+      .social-link:hover {
+        transform: translateY(-3px);
+        color: #8b5cf6;
+      }
+
+      .footer-links {
+        margin-top: 20px;
+      }
+
+      .footer-link {
+        color: #8b949e;
+        text-decoration: none;
+        margin: 0 15px;
+        font-size: 14px;
+        transition: color 0.3s ease;
+      }
+
+      .footer-link:hover {
+        color: #c9d1d9;
+      }
+
+      /* Responsive design */
+      @media only screen and (max-width: 600px) {
+        .email-container {
+          margin: 0;
+          border-radius: 0;
+        }
+
+        .header {
+          padding: 30px 20px;
+        }
+
+        .logo {
+          font-size: 36px;
+        }
+
+        .content {
+          padding: 30px 25px;
+        }
+
+        .greeting {
+          font-size: 24px;
+        }
+
+        .welcome-message {
+          font-size: 16px;
+        }
+
+        .stats {
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .footer {
+          padding: 30px 25px 25px 25px;
+        }
+      }
+
+      /* Dark mode enhancements */
+      @media (prefers-color-scheme: dark) {
+        .email-container {
+          border: 1px solid #21262d;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class='email-container'>
+      <!-- Header -->
+      <div class='header'>
+        <div class='logo-container'>
+          <div class='logo'>{{appName}}</div>
+          <div class='header-subtitle'>Connect. Create. Collaborate.</div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class='content'>
+        <h1 class='greeting'>Welcome, {{username}}! 🎉</h1>
+
+        <p class='welcome-message'>
+          We're thrilled to have you join the
+          {{appName}}
+          community! Your account has been successfully created, and you're now
+          ready to experience the future of video communication.
+        </p>
+
+        <div class='features'>
+          <ul class='feature-list'>
+            <li class='feature-item'>
+              <span class='feature-icon'>🎥</span>
+              <span class='feature-text'>Crystal-clear HD video calls with up to
+                50 participants</span>
+            </li>
+            <li class='feature-item'>
+              <span class='feature-icon'>🔒</span>
+              <span class='feature-text'>End-to-end encryption for secure
+                conversations</span>
+            </li>
+            <li class='feature-item'>
+              <span class='feature-icon'>🌐</span>
+              <span class='feature-text'>Cross-platform support - works
+                everywhere</span>
+            </li>
+            <li class='feature-item'>
+              <span class='feature-icon'>⚡</span>
+              <span class='feature-text'>Lightning-fast connection with zero lag</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class='stats'>
+          <div class='stat-item'>
+            <span class='stat-number'>10M+</span>
+            <span class='stat-label'>Active Users</span>
+          </div>
+          <div class='stat-item'>
+            <span class='stat-number'>99.9%</span>
+            <span class='stat-label'>Uptime</span>
+          </div>
+          <div class='stat-item'>
+            <span class='stat-number'>24/7</span>
+            <span class='stat-label'>Support</span>
+          </div>
+        </div>
+
+        <div class='cta-container'>
+          <a href='https://{{appName}}.com/dashboard' class='cta-button'>
+            Start Your First Call
+          </a>
+        </div>
+
+        <p class='welcome-message'>
+          Have questions? Our support team is here to help 24/7. Just reply to
+          this email or visit our help center for instant assistance.
+        </p>
+      </div>
+
+      <!-- Footer -->
+      <div class='footer'>
+        <p class='footer-text'>
+          Thanks for choosing
+          {{appName}}. We can't wait to see what amazing conversations you'll
+          create!
+        </p>
+
+        <div class='social-links'>
+          <a href='#' class='social-link'>📱</a>
+          <a href='#' class='social-link'>🐦</a>
+          <a href='#' class='social-link'>💼</a>
+          <a href='#' class='social-link'>📘</a>
+        </div>
+
+        <div class='footer-links'>
+          <a href='#' class='footer-link'>Privacy Policy</a>
+          <a href='#' class='footer-link'>Terms of Service</a>
+          <a href='#' class='footer-link'>Help Center</a>
+          <a href='#' class='footer-link'>Unsubscribe</a>
+        </div>
+
+        <p class='footer-text' style='margin-top: 20px; font-size: 12px'>
+          © 2024
+          {{appName}}. All rights reserved.<br />
+          123 Tech Street, San Francisco, CA 94105
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
