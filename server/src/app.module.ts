@@ -8,6 +8,7 @@ import { RoomModule } from './room/room.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { AppService } from './app.service';
     UserModule,
     RoomModule,
     GatewayModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

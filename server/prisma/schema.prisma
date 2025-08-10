@@ -18,7 +18,7 @@ model User {
   id           String   @id @default(cuid())
   username     String   @unique
   email        String   @unique
-  password     String
+  password     String?
   avatar       String? // nullable
   isOnline     Boolean  @default(false)
   lastSeen     DateTime @default(now())

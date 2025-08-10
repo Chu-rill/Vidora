@@ -1,34 +1,60 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Get,
+  Req,
+  Res,
+} from '@nestjs/common';
+import { Response } from 'express';
 import { OauthService } from './oauth.service';
-import { CreateOauthDto } from './dto/create-oauth.dto';
-import { UpdateOauthDto } from './dto/update-oauth.dto';
+import { GoogleGuard } from '../../guards/google.guard';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('oauth')
 export class OauthController {
-  constructor(private readonly oauthService: OauthService) {}
+  constructor(
+    private readonly oauthService: OauthService,
+    private readonly configService: ConfigService,
+  ) {}
 
-  @Post()
-  create(@Body() createOauthDto: CreateOauthDto) {
-    return this.oauthService.create(createOauthDto);
+  @Get('google')
+  @UseGuards(GoogleGuard)
+  async googleAuth(@Req() req) {
+    // This triggers the Google OAuth flow
   }
 
-  @Get()
-  findAll() {
-    return this.oauthService.findAll();
-  }
+  @Get('google/callback')
+  @UseGuards(GoogleGuard)
+  async googleAuthRedirect(@Req() req, @Res() res: Response) {
+    const result = await this.oauthService.validateOAuthGoogleLogin(req);
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.oauthService.findOne(+id);
-  }
+    const redirectUrl = `${this.configService.get<string>(
+      'FRONTEND_REDIRECT_URL',
+    )}?token=${result.token}`;
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateOauthDto: UpdateOauthDto) {
-    return this.oauthService.update(+id, updateOauthDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.oauthService.remove(+id);
+    return res.redirect(redirectUrl);
   }
 }
+
+// import { Controller, Post, Body, UseGuards, Get, Req } from '@nestjs/common';
+// import { OauthService } from './oauth.service';
+// import { GoogleGuard } from 'src/guard/google.guard';
+
+// @Controller('oauth')
+// export class OauthController {
+//   constructor(private readonly oauthService: OauthService) {}
+
+//   @Get('google')
+//   @UseGuards(GoogleGuard)
+//   async googleAuth(@Req() req) {
+//     // This triggers the Google OAuth flow
+//   }
+
+//   @Get('google/callback')
+//   @UseGuards(GoogleGuard)
+//   async googleAuthRedirect(@Req() req) {
+//     return this.oauthService.validateOAuthGoogleLogin(req);
+//   }
+// }
