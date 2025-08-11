@@ -43,6 +43,28 @@ export class UserRepository {
     return user;
   }
 
+  async verifyUser(id: string) {
+    try {
+      const user = await this.prisma.user.update({
+        where: { id },
+        data: { isVerified: true },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          avatar: true,
+          isOnline: true,
+          isVerified: true,
+          updatedAt: true,
+        },
+      });
+
+      return user;
+    } catch (error) {
+      throw new NotFoundException('User not found');
+    }
+  }
+
   async getUserById(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },
