@@ -4,20 +4,17 @@ import {
   UnauthorizedException,
   BadRequestException,
   HttpStatus,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcryptjs';
-import { SignupDto } from './validation';
-import { LoginDto } from 'src/user/validation';
+import * as crypto from 'crypto';
+import { SignupDto, LoginDto, VerifyEmailDto } from './validation';
 import { UserRepository } from 'src/user/user.repository';
 import {
   comparePassword,
   encrypt,
 } from 'src/utils/helper-functions/encryption';
-import { use } from 'passport';
 import { UserService } from 'src/user/user.service';
-import { success } from 'zod';
 import { EmailService } from 'src/email/email.service';
 
 @Injectable()
@@ -40,7 +37,7 @@ export class AuthService {
     }
 
     // Hash password
-    let hashedPassword = await encrypt(password.trim().toLowerCase());
+    let hashedPassword = await encrypt(password.trim());
 
     // Create user
     const user = await this.userRepository.createUser(
@@ -49,21 +46,33 @@ export class AuthService {
       hashedPassword,
     );
 
-    const data = {
-      subject: 'Vidora welcome email',
-      username: user.username,
-    };
-    await this.mailService.sendWelcomeEmail(user.email, data);
+    // Generate verification token
+    const token = await this.generateVerificationToken(user.id);
 
-    // Generate token
-    const token = this.generateToken(user.id);
+    const data = {
+      subject: 'Vidora Verification Email',
+      username: user.username,
+      token,
+    };
+
+    try {
+      await this.mailService.sendWelcomeEmail(user.email, data);
+    } catch (error) {
+      console.error('Failed to send verification email:', error);
+      throw new BadRequestException('Failed to send verification email');
+    }
 
     return {
       statusCode: HttpStatus.CREATED,
       success: true,
-      message: 'User registered successfully',
-      data: user,
-      token,
+      message:
+        'User registered successfully. Please check your email for verification.',
+      data: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        createdAt: user.createdAt,
+      },
     };
   }
 
@@ -74,12 +83,12 @@ export class AuthService {
     const user = await this.userRepository.getUserByEmail(email);
 
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     // Check password
     const isPasswordValid = await comparePassword(
-      password.trim().toLowerCase(),
+      password.trim(),
       user.password,
     );
 
@@ -87,20 +96,101 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    if (!user.isVerified) {
+      throw new UnauthorizedException(
+        'Please verify your email before logging in',
+      );
+    }
+
     // Update online status
     await this.userService.updateOnlineStatus(user.id, true);
 
     // Generate token
-    const token = this.generateToken(user.id);
-
-    const { password: _, ...userWithoutPassword } = user;
+    const token = this.generateAuthToken(user.id);
 
     return {
       statusCode: HttpStatus.OK,
       success: true,
       message: 'Login successful',
-      data: userWithoutPassword,
+      data: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        isVerified: user.isVerified,
+        avatar: user.avatar,
+      },
       token,
+    };
+  }
+
+  async verifyEmail(dto: VerifyEmailDto) {
+    const { token } = dto;
+
+    // Find user by verification token
+    const user = await this.userRepository.findByVerificationToken(token);
+    if (!user) {
+      throw new NotFoundException('Invalid verification token');
+    }
+
+    // Check if token is expired
+    if (user.verificationExpiry && user.verificationExpiry < new Date()) {
+      throw new BadRequestException('Verification token has expired');
+    }
+
+    // Check if already verified
+    if (user.isVerified) {
+      throw new BadRequestException('Email is already verified');
+    }
+
+    // Mark user as verified
+    await this.userRepository.verifyUser(user.id);
+
+    const authToken = this.generateAuthToken(user.id);
+
+    await this.userService.updateOnlineStatus(user.id, true);
+
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Email verified successfully',
+      data: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        isVerified: true,
+      },
+      token: authToken,
+    };
+  }
+
+  async resendVerificationEmail(email: string) {
+    const user = await this.userRepository.getUserByEmail(email);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.isEmailVerified) {
+      throw new BadRequestException('Email is already verified');
+    }
+
+    const token = await this.generateVerificationToken(user.id);
+
+    const data = {
+      subject: 'Vidora Verification Email',
+      username: user.username,
+      token,
+    };
+    try {
+      await this.mailService.sendWelcomeEmail(user.email, data);
+    } catch (error) {
+      console.error('Failed to send verification email:', error);
+      throw new BadRequestException('Failed to send verification email');
+    }
+
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Verification email sent successfully',
     };
   }
 
@@ -114,7 +204,21 @@ export class AuthService {
     };
   }
 
-  private generateToken(userId: string): string {
+  private generateAuthToken(userId: string): string {
     return this.jwtService.sign(userId);
+  }
+
+  private async generateVerificationToken(userId: string): Promise<string> {
+    // Generate secure random token
+    const token = crypto.randomBytes(32).toString('hex');
+
+    // Set expiry to 24 hours from now
+    const expiry = new Date();
+    expiry.setHours(expiry.getHours() + 24);
+
+    // Update user with verification token
+    await this.userRepository.updateVerificationToken(userId, token, expiry);
+
+    return token;
   }
 }
