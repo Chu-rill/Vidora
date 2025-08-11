@@ -16,8 +16,6 @@ export class UserRepository {
         id: true,
         username: true,
         email: true,
-        avatar: true,
-        isOnline: true,
         createdAt: true,
       },
     });
@@ -35,12 +33,74 @@ export class UserRepository {
         id: true,
         username: true,
         email: true,
-        avatar: true,
-        isOnline: true,
         createdAt: true,
       },
     });
     return user;
+  }
+
+  async verifyUser(id: string) {
+    try {
+      const user = await this.prisma.user.update({
+        where: { id },
+        data: {
+          isVerified: true,
+          verificationToken: null,
+          verificationTokenExpiry: null,
+        },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          avatar: true,
+          isOnline: true,
+          isVerified: true,
+          updatedAt: true,
+        },
+      });
+
+      return user;
+    } catch (error) {
+      throw new NotFoundException('User not found');
+    }
+  }
+
+  async findByVerificationToken(token: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { verificationToken: token },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        isVerified: true,
+        verificationToken: true,
+        verificationExpiry: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
+
+  async updateVerificationToken(
+    userId: string,
+    token: string,
+    expiry: Date,
+  ): Promise<void> {
+    try {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          verificationToken: token,
+          verificationTokenExpiry: expiry,
+        },
+      });
+    } catch (error) {
+      throw new NotFoundException('User not found');
+    }
   }
 
   async getUserById(id: string) {
@@ -52,8 +112,7 @@ export class UserRepository {
         email: true,
         avatar: true,
         isOnline: true,
-        lastSeen: true,
-        createdAt: true,
+        isVerified: true,
       },
     });
 
@@ -73,8 +132,7 @@ export class UserRepository {
         email: true,
         avatar: true,
         isOnline: true,
-        lastSeen: true,
-        createdAt: true,
+        isVerified: true,
       },
     });
     return user;

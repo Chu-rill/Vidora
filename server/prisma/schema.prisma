@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
@@ -15,44 +9,87 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  username     String   @unique
-  email        String   @unique
-  password     String?
-  avatar       String? // nullable
-  isOnline     Boolean  @default(false)
-  lastSeen     DateTime @default(now())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  OTP          Otp?
-  rooms        Room[]   @relation("RoomParticipants")
-  createdRooms Room[]   @relation("RoomCreator")
-}
-
-model Otp {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  user      User     @relation(fields: [email], references: [email], onDelete: Cascade)
-  code      String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  id                 String         @id @default(cuid())
+  username           String         @unique
+  email              String         @unique
+  password           String?
+  avatar             String? // nullable
+  isOnline           Boolean        @default(false)
+  lastSeen           DateTime       @default(now())
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  isVerified         Boolean        @default(false)
+  verificationToken  String?        @unique
+  verificationExpiry DateTime?
+  rooms              Room[]         @relation("RoomParticipants")
+  createdRooms       Room[]         @relation("RoomCreator")
+  subscriptions      Subscription[]
+  callSessions       CallSession[]
+  transactions       Transaction[]
+  credits            Int            @default(0) // in-app virtual currency
 }
 
 model Room {
-  id              String   @id @default(cuid())
+  id              String        @id @default(cuid())
   name            String
   description     String?
-  type            RoomType @default(PUBLIC)
+  type            RoomType      @default(PUBLIC)
   creatorId       String
-  creator         User     @relation("RoomCreator", fields: [creatorId], references: [id])
-  participants    User[]   @relation("RoomParticipants")
-  maxParticipants Int      @default(10)
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  creator         User          @relation("RoomCreator", fields: [creatorId], references: [id])
+  participants    User[]        @relation("RoomParticipants")
+  maxParticipants Int           @default(10)
+  isActive        Boolean       @default(true)
+  price           Int? // price in cents, null for free rooms
+  isPaid          Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  callSessions    CallSession[]
 }
 
 enum RoomType {
   PUBLIC
   PRIVATE
+}
+
+model Subscription {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  plan      SubscriptionPlan @default(BASIC)
+  expiresAt DateTime
+  createdAt DateTime         @default(now())
+}
+
+enum SubscriptionPlan {
+  BASIC
+  PRO
+  VIP
+}
+
+model CallSession {
+  id        String   @id @default(cuid())
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  duration  Int // in seconds
+  cost      Int? // in cents
+  createdAt DateTime @default(now())
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  amount      Int // in cents
+  type        TxType
+  description String?
+  createdAt   DateTime @default(now())
+}
+
+enum TxType {
+  CREDIT_PURCHASE
+  ROOM_ACCESS
+  SUBSCRIPTION
+  OTHER
 }

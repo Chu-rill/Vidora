@@ -31,9 +31,11 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/platform-socket.io": "^11.1.5",
+    "@nestjs/swagger": "^11.2.0",
     "@nestjs/throttler": "^6.4.0",
     "@prisma/client": "^6.13.0",
     "bcryptjs": "^3.0.2",
+    "crypto": "^1.0.1",
     "handlebars": "^4.7.8",
     "helmet": "^8.1.0",
     "nodemailer": "^7.0.5",
@@ -44,6 +46,7 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "socket.io": "^4.8.1",
+    "swagger-ui-express": "^5.0.1",
     "zod": "^4.0.14"
   },
   "devDependencies": {
@@ -61,6 +64,7 @@
     "@types/passport-google-oauth20": "^2.0.16",
     "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^6.0.2",
+    "@types/swagger-ui-express": "^4.1.8",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",

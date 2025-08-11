@@ -1,6 +1,7 @@
 import { z } from 'zod';
+import { ApiProperty } from '@nestjs/swagger';
 
-// Signup validator schema
+// Zod Schemas
 export const SignupSchema = z.object({
   username: z.string().min(1, { message: 'Username is required' }),
   password: z
@@ -9,12 +10,57 @@ export const SignupSchema = z.object({
   email: z.string().email({ message: 'Invalid email format' }),
 });
 
-export type SignupDto = z.infer<typeof SignupSchema>;
-
-// Login validator schema
 export const LoginSchema = z.object({
   email: z.string().email({ message: 'Invalid email format' }),
   password: z.string().min(1, { message: 'Password is required' }),
 });
 
-export type ßLoginDto = z.infer<typeof LoginSchema>;
+export const VerifyEmailSchema = z.object({
+  token: z.string().min(1, { message: 'Verification token is required' }),
+});
+
+export const EmailValidationSchema = z.object({
+  email: z.string().email({ message: 'Invalid email format' }),
+});
+
+// Type inference from Zod schemas
+export type SignupDto = z.infer<typeof SignupSchema>;
+export type LoginDto = z.infer<typeof LoginSchema>;
+export type VerifyEmailDto = z.infer<typeof VerifyEmailSchema>;
+export type EmailValidationDto = z.infer<typeof EmailValidationSchema>;
+
+// Swagger DTO classes for documentation (optional but recommended)
+export class SignupDtoSwagger {
+  @ApiProperty({ example: 'johndoe', description: 'Username for the account' })
+  username: string;
+
+  @ApiProperty({ example: 'john@example.com', description: 'Email address' })
+  email: string;
+
+  @ApiProperty({
+    example: 'securePassword123',
+    description: 'Password (minimum 6 characters)',
+  })
+  password: string;
+}
+
+export class LoginDtoSwagger {
+  @ApiProperty({ example: 'john@example.com', description: 'Email address' })
+  email: string;
+
+  @ApiProperty({ example: 'securePassword123', description: 'Password' })
+  password: string;
+}
+
+export class VerifyEmailDtoSwagger {
+  @ApiProperty({
+    example: 'abc123def456...',
+    description: 'Email verification token',
+  })
+  token: string;
+}
+
+export class EmailValidationDtoSwagger {
+  @ApiProperty({ example: 'john@example.com', description: 'Email address' })
+  email: string;
+}

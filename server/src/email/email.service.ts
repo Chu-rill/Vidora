@@ -63,9 +63,11 @@ export class EmailService {
   // Send an email with a template
   async sendWelcomeEmail(
     email: string,
-    data: { subject: string; username: string },
+    data: { subject: string; username: string; token: string },
   ): Promise<void> {
     try {
+      const frontendUrl = this.configService.get('FRONTEND_URL');
+      const verificationUrl = `${frontendUrl}/verify-email?token=${data.token}`;
       const templateSource = await this.readTemplateFile(
         this.welcomeTemplatePath,
       );
@@ -78,7 +80,8 @@ export class EmailService {
         html: emailTemplate({
           appName: 'Vidora',
           username: data.username,
-          title: 'Welcome Email',
+          verificationLink: verificationUrl,
+          title: 'Verification Email',
         }),
       });
 
