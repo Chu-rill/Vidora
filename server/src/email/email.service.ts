@@ -1,13 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import * as fs from 'fs/promises';
 import * as handlebars from 'handlebars';
 import * as path from 'path';
 import { ConfigService } from '@nestjs/config';
-import { last } from 'rxjs';
 
 @Injectable()
 export class EmailService {
+  private readonly logger = new Logger(EmailService.name);
   private transporter: nodemailer.Transporter;
   private welcomeTemplatePath: string;
 
@@ -38,28 +38,6 @@ export class EmailService {
     }
   }
 
-  // Send an email without a template
-  async sendEmail(
-    email: string,
-    subject: string,
-    text?: string,
-  ): Promise<void> {
-    try {
-      const info = await this.transporter.sendMail({
-        from: this.configService.get<string>('EMAIL_USER'),
-        to: email,
-        subject,
-        text: text || '',
-      });
-
-      console.log(`Message sent: ${info.response}`);
-    } catch (error) {
-      console.error(
-        `Error sending email: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      );
-    }
-  }
-
   // Send an email with a template
   async sendWelcomeEmail(
     email: string,
@@ -85,8 +63,18 @@ export class EmailService {
         }),
       });
 
-      console.log(`Message sent: ${info.response}`);
+      this.logger.log(
+        `Welcome email sent successfully to ${email}. MessageId: ${info.messageId}`,
+      );
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+
+      this.logger.error(
+        `Failed to send welcome email to ${email}: ${errorMessage}`,
+        error,
+      );
+
       console.error(
         `Error sending email with template: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );

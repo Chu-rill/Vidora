@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { ConfigModule } from './config/config.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { EmailAndPasswordAuthModule } from './auth/email-password-auth/email-password-auth.module';
 import { UserModule } from './user/user.module';
@@ -12,7 +11,6 @@ import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
-    ConfigModule,
     ThrottlerModule.forRoot([
       {
         ttl: 60000, // 1 minute

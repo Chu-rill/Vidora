@@ -22,18 +22,22 @@ export class UserRepository {
     return user;
   }
 
-  async createUserOauth(username: string, email: string, avatar: string) {
+  async createUserOauth(username: string, email: string, picture: string) {
     const user = await this.prisma.user.create({
       data: {
         username,
         email,
-        avatar,
+        avatar: picture,
       },
       select: {
         id: true,
         username: true,
         email: true,
         createdAt: true,
+        password: true,
+        avatar: true,
+        isOnline: true,
+        isVerified: true,
       },
     });
     return user;
@@ -46,7 +50,7 @@ export class UserRepository {
         data: {
           isVerified: true,
           verificationToken: null,
-          verificationTokenExpiry: null,
+          verificationExpiry: null,
         },
         select: {
           id: true,
@@ -95,7 +99,7 @@ export class UserRepository {
         where: { id: userId },
         data: {
           verificationToken: token,
-          verificationTokenExpiry: expiry,
+          verificationExpiry: expiry,
         },
       });
     } catch (error) {
@@ -130,6 +134,7 @@ export class UserRepository {
         id: true,
         username: true,
         email: true,
+        password: true,
         avatar: true,
         isOnline: true,
         isVerified: true,

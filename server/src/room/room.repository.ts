@@ -12,7 +12,7 @@ export class RoomRepository {
   async createRoom(
     name: string,
     description: string,
-    type: string,
+    type: import('../../generated/prisma').RoomType,
     maxParticipants: number,
     creatorId: string,
   ) {

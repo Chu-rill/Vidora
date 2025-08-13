@@ -22,5 +22,6 @@ import { EmailModule } from 'src/email/email.module';
   ],
   providers: [AuthService],
   controllers: [AuthController],
+  exports: [AuthService],
 })
 export class EmailAndPasswordAuthModule {}

@@ -89,7 +89,7 @@ export class AuthService {
     // Check password
     const isPasswordValid = await comparePassword(
       password.trim(),
-      user.password,
+      user.password!,
     );
 
     if (!isPasswordValid) {
@@ -169,7 +169,7 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    if (user.isEmailVerified) {
+    if (user.isVerified) {
       throw new BadRequestException('Email is already verified');
     }
 
@@ -208,7 +208,7 @@ export class AuthService {
     return this.jwtService.sign(userId);
   }
 
-  private async generateVerificationToken(userId: string): Promise<string> {
+  async generateVerificationToken(userId: string): Promise<string> {
     // Generate secure random token
     const token = crypto.randomBytes(32).toString('hex');
 

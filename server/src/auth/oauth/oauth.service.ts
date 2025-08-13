@@ -2,6 +2,7 @@ import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { EmailService } from 'src/email/email.service';
 import { UserRepository } from 'src/user/user.repository';
+import { AuthService } from '../email-password-auth/email-password-auth.service';
 
 @Injectable()
 export class OauthService {
@@ -9,6 +10,7 @@ export class OauthService {
     private jwt: JwtService,
     private userRepository: UserRepository,
     private mailService: EmailService,
+    private authService: AuthService,
   ) {}
 
   async validateOAuthGoogleLogin(req): Promise<any> {
@@ -34,9 +36,11 @@ export class OauthService {
         auth.picture,
       );
 
+      const token = await this.authService.generateVerificationToken(user.id);
       const data = {
         subject: 'Vidora welcome email',
         username: user.username,
+        token,
       };
       await this.mailService.sendWelcomeEmail(user.email, data);
     }
@@ -47,7 +51,14 @@ export class OauthService {
     return {
       statusCode: HttpStatus.OK,
       message: 'Google Auth Successful',
-      data: user,
+      data: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar,
+        isOnline: user.isOnline,
+        isVerified: user.isVerified,
+      },
       token: token,
     };
   }
