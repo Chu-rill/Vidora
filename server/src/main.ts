@@ -35,7 +35,7 @@ async function bootstrap() {
     .setTitle('Vidora API')
     .setDescription('The Vidora API documentation')
     .setVersion('1.0')
-    .addTag('auth', 'Authentication endpoints')
+    // .addTag('auth', 'Authentication endpoints')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

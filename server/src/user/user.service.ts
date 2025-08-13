@@ -1,7 +1,6 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateUserDto } from './validation';
 import { UserRepository } from './user.repository';
-import { success } from 'zod';
 
 @Injectable()
 export class UserService {

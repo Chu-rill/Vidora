@@ -29,7 +29,7 @@ export type LoginDto = z.infer<typeof LoginSchema>;
 export type VerifyEmailDto = z.infer<typeof VerifyEmailSchema>;
 export type EmailValidationDto = z.infer<typeof EmailValidationSchema>;
 
-// Swagger DTO classes for documentation (optional but recommended)
+// Swagger DTO classes for documentation
 export class SignupDtoSwagger {
   @ApiProperty({ example: 'johndoe', description: 'Username for the account' })
   username: string;
