@@ -23,6 +23,7 @@ import {
   VerifyEmailSchema,
   EmailValidationSchema,
   EmailValidationDtoSwagger,
+  EmailValidationDto,
 } from './validation';
 import {
   ApiBearerAuth,
@@ -89,7 +90,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Verification email sent' })
   @ApiResponse({ status: 404, description: 'User not found' })
   @ApiResponse({ status: 400, description: 'Email already verified' })
-  async resendVerificationEmail(@Body('email') email: string) {
-    return this.authService.resendVerificationEmail(email);
+  async resendVerificationEmail(@Body() dto: EmailValidationDto) {
+    return this.authService.resendVerificationEmail(dto);
   }
 }
