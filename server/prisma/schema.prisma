@@ -9,24 +9,24 @@ datasource db {
 }
 
 model User {
-  id                 String         @id @default(cuid())
-  username           String         @unique
-  email              String         @unique
-  password           String?
-  avatar             String? // nullable
-  isOnline           Boolean        @default(false)
-  lastSeen           DateTime       @default(now())
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
-  isVerified         Boolean        @default(false)
-  verificationToken  String?        @unique
-  verificationExpiry DateTime?
-  rooms              Room[]         @relation("RoomParticipants")
-  createdRooms       Room[]         @relation("RoomCreator")
-  subscriptions      Subscription[]
-  callSessions       CallSession[]
-  transactions       Transaction[]
-  credits            Int            @default(0) // in-app virtual currency
+  id                String         @id @default(cuid())
+  username          String         @unique
+  email             String         @unique
+  password          String?
+  avatar            String? // nullable
+  isOnline          Boolean        @default(false)
+  lastSeen          DateTime       @default(now())
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  isVerified        Boolean        @default(false)
+  actionToken       String?        @unique
+  actionTokenExpiry DateTime?
+  rooms             Room[]         @relation("RoomParticipants")
+  createdRooms      Room[]         @relation("RoomCreator")
+  subscriptions     Subscription[]
+  callSessions      CallSession[]
+  transactions      Transaction[]
+  credits           Int            @default(0) // in-app virtual currency
 }
 
 model Room {

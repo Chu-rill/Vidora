@@ -105,7 +105,7 @@ export class EmailService {
         html: emailTemplate({
           appName: 'Vidora',
           username: data.username,
-          verificationLink: verificationUrl,
+          resetPasswordLink: verificationUrl,
           title: 'Forgot Password',
         }),
       });

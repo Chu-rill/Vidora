@@ -43,14 +43,14 @@ export class UserRepository {
     return user;
   }
 
-  async verifyUser(id: string) {
+  async markUserAsVerified(id: string) {
     try {
       const user = await this.prisma.user.update({
         where: { id },
         data: {
           isVerified: true,
-          verificationToken: null,
-          verificationExpiry: null,
+          actionToken: null,
+          actionTokenExpiry: null,
         },
         select: {
           id: true,
@@ -69,16 +69,16 @@ export class UserRepository {
     }
   }
 
-  async findByVerificationToken(token: string) {
+  async findByActionToken(token: string) {
     const user = await this.prisma.user.findUnique({
-      where: { verificationToken: token },
+      where: { actionToken: token },
       select: {
         id: true,
         username: true,
         email: true,
         isVerified: true,
-        verificationToken: true,
-        verificationExpiry: true,
+        actionToken: true,
+        actionTokenExpiry: true,
       },
     });
 
@@ -89,7 +89,7 @@ export class UserRepository {
     return user;
   }
 
-  async updateVerificationToken(
+  async updateActionToken(
     userId: string,
     token: string,
     expiry: Date,
@@ -98,8 +98,8 @@ export class UserRepository {
       await this.prisma.user.update({
         where: { id: userId },
         data: {
-          verificationToken: token,
-          verificationExpiry: expiry,
+          actionToken: token,
+          actionTokenExpiry: expiry,
         },
       });
     } catch (error) {

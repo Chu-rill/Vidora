@@ -68,9 +68,9 @@ export class AuthService {
 
       this.logger.log(`User created successfully with ID: ${user.id}`);
 
-      // Generate verification token
-      this.logger.debug(`Generating verification token for user: ${user.id}`);
-      const token = await this.generateVerificationToken(user.id);
+      // Generate action token for email verification
+      this.logger.debug(`Generating action token for user: ${user.id}`);
+      const token = await this.generateActionToken(user.id);
 
       const emailData = {
         subject: 'Vidora Verification Email',
@@ -183,55 +183,55 @@ export class AuthService {
     }
   }
 
-  async verifyEmail(dto: VerifyEmailDto) {
+  async confirmEmailAddress(dto: VerifyEmailDto) {
     const { token } = dto;
     this.logger.log(
-      `Email verification attempt with token: ${token.substring(0, 8)}...`,
+      `Email confirmation attempt with token: ${token.substring(0, 8)}...`,
     );
 
     try {
-      // Find user by verification token
-      this.logger.debug(`Looking up user by verification token`);
-      const user = await this.userRepository.findByVerificationToken(token);
+      // Find user by action token
+      this.logger.debug(`Looking up user by action token`);
+      const user = await this.userRepository.findByActionToken(token);
 
       if (!user) {
         this.logger.warn(
-          `Email verification failed: Invalid token: ${token.substring(0, 8)}...`,
+          `Email confirmation failed: Invalid token: ${token.substring(0, 8)}...`,
         );
-        throw new NotFoundException('Invalid verification token');
+        throw new NotFoundException('Invalid confirmation token');
       }
 
       // Check if token is expired
-      if (user.verificationExpiry && user.verificationExpiry < new Date()) {
+      if (user.actionTokenExpiry && user.actionTokenExpiry < new Date()) {
         this.logger.warn(
-          `Email verification failed: Token expired for user: ${user.id}`,
+          `Email confirmation failed: Token expired for user: ${user.id}`,
         );
-        throw new BadRequestException('Verification token has expired');
+        throw new BadRequestException('Confirmation token has expired');
       }
 
       // Check if already verified
       if (user.isVerified) {
         this.logger.warn(
-          `Email verification failed: Already verified for user: ${user.id}`,
+          `Email confirmation failed: Already verified for user: ${user.id}`,
         );
         throw new BadRequestException('Email is already verified');
       }
 
       // Mark user as verified, generate auth token, and update online status concurrently
       this.logger.debug(
-        `Verifying user and updating status for user: ${user.id}`,
+        `Confirming user and updating status for user: ${user.id}`,
       );
       const [, authToken] = await Promise.all([
-        this.userRepository.verifyUser(user.id),
+        this.userRepository.markUserAsVerified(user.id),
         this.generateAuthToken(user.id),
         this.userService.updateOnlineStatus(user.id, true),
       ]);
 
-      this.logger.log(`Email verification successful for user: ${user.id}`);
+      this.logger.log(`Email confirmation successful for user: ${user.id}`);
       return {
         statusCode: HttpStatus.OK,
         success: true,
-        message: 'Email verified successfully',
+        message: 'Email confirmed successfully',
         data: {
           id: user.id,
           username: user.username,
@@ -249,16 +249,16 @@ export class AuthService {
       }
 
       this.logger.error(
-        `Email verification failed for token ${token.substring(0, 8)}...:`,
+        `Email confirmation failed for token ${token.substring(0, 8)}...:`,
         error.stack,
       );
-      throw new InternalServerErrorException('Email verification failed');
+      throw new InternalServerErrorException('Email confirmation failed');
     }
   }
 
-  async resendVerificationEmail(dto: EmailValidationDto) {
+  async resendEmailConfirmation(dto: EmailValidationDto) {
     const { email } = dto;
-    this.logger.log(`Resending verification email to: ${email}`);
+    this.logger.log(`Resending email confirmation to: ${email}`);
 
     try {
       this.logger.debug(`Looking up user with email: ${email}`);
@@ -266,22 +266,20 @@ export class AuthService {
 
       if (!user) {
         this.logger.warn(
-          `Resend verification failed: User not found with email: ${email}`,
+          `Resend confirmation failed: User not found with email: ${email}`,
         );
         throw new NotFoundException('User not found');
       }
 
       if (user.isVerified) {
         this.logger.warn(
-          `Resend verification failed: Email already verified for user: ${user.id}`,
+          `Resend confirmation failed: Email already verified for user: ${user.id}`,
         );
         throw new BadRequestException('Email is already verified');
       }
 
-      this.logger.debug(
-        `Generating new verification token for user: ${user.id}`,
-      );
-      const token = await this.generateVerificationToken(user.id);
+      this.logger.debug(`Generating new action token for user: ${user.id}`);
+      const token = await this.generateActionToken(user.id);
 
       const emailData = {
         subject: 'Vidora Verification Email',
@@ -289,16 +287,16 @@ export class AuthService {
         token,
       };
 
-      this.logger.debug(`Sending verification email to: ${user.email}`);
+      this.logger.debug(`Sending confirmation email to: ${user.email}`);
       await this.mailService.sendWelcomeEmail(user.email, emailData);
 
       this.logger.log(
-        `Verification email resent successfully to: ${user.email}`,
+        `Email confirmation resent successfully to: ${user.email}`,
       );
       return {
         statusCode: HttpStatus.OK,
         success: true,
-        message: 'Verification email sent successfully',
+        message: 'Confirmation email sent successfully',
       };
     } catch (error) {
       if (
@@ -309,21 +307,21 @@ export class AuthService {
       }
 
       this.logger.error(
-        `Resend verification email failed for ${email}:`,
+        `Resend email confirmation failed for ${email}:`,
         error.stack,
       );
 
       if (error.message?.includes('Failed to send')) {
-        throw new BadRequestException('Failed to send verification email');
+        throw new BadRequestException('Failed to send confirmation email');
       }
 
       throw new InternalServerErrorException(
-        'Failed to resend verification email',
+        'Failed to resend email confirmation',
       );
     }
   }
 
-  async forgotPassword(forgotPasswordDto: EmailValidationDto) {
+  async initiatePasswordReset(forgotPasswordDto: EmailValidationDto) {
     const { email } = forgotPasswordDto;
 
     this.logger.debug(`Looking up user with email: ${email}`);
@@ -335,26 +333,28 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    // Logic to handle forgot password (e.g., sending reset link)
-    const token = await this.generateVerificationToken(user.id);
+    // Generate action token for password reset
+    const token = await this.generateActionToken(user.id);
 
     const emailData = {
-      subject: 'Forgot password Email',
+      subject: 'Password Reset Request',
       username: user.username,
       token,
     };
 
-    this.logger.debug(`Sending forgot password email to: ${user.email}`);
+    this.logger.debug(`Sending password reset email to: ${user.email}`);
     try {
       await this.mailService.forgetPasswordEmail(user.email, emailData);
-      this.logger.log(`Welcome email sent successfully to: ${user.email}`);
+      this.logger.log(
+        `Password reset email sent successfully to: ${user.email}`,
+      );
     } catch (emailError) {
       this.logger.error(
-        `Failed to send verification email to ${user.email}:`,
+        `Failed to send password reset email to ${user.email}:`,
         emailError.stack,
       );
     }
-    this.logger.log(`Forgot password email sent to user: ${user.id}`);
+    this.logger.log(`Password reset initiated for user: ${user.id}`);
     return {
       statusCode: HttpStatus.OK,
       success: true,
@@ -396,32 +396,30 @@ export class AuthService {
     }
   }
 
-  async generateVerificationToken(userId: string): Promise<string> {
+  async generateActionToken(userId: string): Promise<string> {
     try {
-      this.logger.debug(`Generating verification token for user: ${userId}`);
+      this.logger.debug(`Generating action token for user: ${userId}`);
 
       // Generate secure random token
       const token = crypto.randomBytes(32).toString('hex');
 
       // Set expiry to 5 minutes from now
       const expiry = new Date();
-      expiry.setHours(expiry.getMinutes() + 5);
+      expiry.setMinutes(expiry.getMinutes() + 5);
 
-      // Update user with verification token
-      await this.userRepository.updateVerificationToken(userId, token, expiry);
+      // Update user with action token
+      await this.userRepository.updateActionToken(userId, token, expiry);
 
       this.logger.debug(
-        `Verification token generated and stored for user: ${userId}`,
+        `Action token generated and stored for user: ${userId}`,
       );
       return token;
     } catch (error) {
       this.logger.error(
-        `Failed to generate verification token for user ${userId}:`,
+        `Failed to generate action token for user ${userId}:`,
         error.stack,
       );
-      throw new InternalServerErrorException(
-        'Failed to generate verification token',
-      );
+      throw new InternalServerErrorException('Failed to generate action token');
     }
   }
 }
