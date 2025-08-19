@@ -202,7 +202,7 @@ export class AuthService {
       }
 
       // Check if token is expired
-      if (user.actionTokenExpiry && user.actionTokenExpiry < new Date()) {
+      if (!user.actionTokenExpiry && user.actionTokenExpiry! < new Date()) {
         this.logger.warn(
           `Email confirmation failed: Token expired for user: ${user.id}`,
         );
@@ -321,8 +321,8 @@ export class AuthService {
     }
   }
 
-  async initiatePasswordReset(forgotPasswordDto: EmailValidationDto) {
-    const { email } = forgotPasswordDto;
+  async initiatePasswordReset(emailDto: EmailValidationDto) {
+    const { email } = emailDto;
 
     this.logger.debug(`Looking up user with email: ${email}`);
     const user = await this.userRepository.getUserByEmail(email);
@@ -360,6 +360,47 @@ export class AuthService {
       success: true,
       message: 'Password reset link sent successfully',
     };
+  }
+
+  async resetPassword(resetPasswordDto: ForgotPasswordDto) {
+    const { token, newPassword, confirmPassword } = resetPasswordDto;
+
+    if (newPassword !== confirmPassword) {
+      throw new BadRequestException('Passwords do not match');
+    }
+
+    const user = await this.userRepository.findByActionToken(token);
+
+    if (
+      !user ||
+      !user.actionTokenExpiry ||
+      user.actionTokenExpiry < new Date()
+    ) {
+      throw new BadRequestException('Reset token is invalid or has expired');
+    }
+
+    try {
+      this.logger.debug(`Resetting password for user: ${user.id}`);
+
+      let hashedPassword = await encrypt(newPassword.trim());
+
+      // Update user password and clear reset token
+      await this.userRepository.updateUserPassword(user.id, hashedPassword);
+
+      // Send confirmation email
+      await this.mailService.sendPasswordChangeConfirmation(
+        user.email,
+        user.name,
+      );
+
+      this.logger.log(`Password successfully reset for user: ${user.email}`);
+      return { message: 'Password has been reset successfully' };
+    } catch (error) {
+      this.logger.error('Reset password error:', error);
+      throw new BadRequestException(
+        'Something went wrong. Please try again later.',
+      );
+    }
   }
 
   async logout(userId: string) {

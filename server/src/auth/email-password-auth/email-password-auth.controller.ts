@@ -79,7 +79,7 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Invalid or expired token' })
   @ApiResponse({ status: 404, description: 'Token not found' })
   async verifyEmail(@Query() dto: VerifyEmailDto) {
-    return this.authService.verifyEmail(dto);
+    return this.authService.confirmEmailAddress(dto);
   }
 
   @Post('resend-verification')
@@ -91,6 +91,6 @@ export class AuthController {
   @ApiResponse({ status: 404, description: 'User not found' })
   @ApiResponse({ status: 400, description: 'Email already verified' })
   async resendVerificationEmail(@Body() dto: EmailValidationDto) {
-    return this.authService.resendVerificationEmail(dto);
+    return this.authService.resendEmailConfirmation(dto);
   }
 }

@@ -69,6 +69,32 @@ export class UserRepository {
     }
   }
 
+  async updateUserPassword(id: string, hashedPassword: string) {
+    try {
+      const user = await this.prisma.user.update({
+        where: { id },
+        data: {
+          password: hashedPassword,
+          actionToken: null,
+          actionTokenExpiry: null,
+        },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          avatar: true,
+          isOnline: true,
+          isVerified: true,
+          updatedAt: true,
+        },
+      });
+
+      return user;
+    } catch (error) {
+      throw new NotFoundException('User not found');
+    }
+  }
+
   async findByActionToken(token: string) {
     const user = await this.prisma.user.findUnique({
       where: { actionToken: token },
