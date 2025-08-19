@@ -14,7 +14,7 @@ import { EmailModule } from './email/email.module';
     ThrottlerModule.forRoot([
       {
         ttl: 60000, // 1 minute
-        limit: 100, // 100 requests per minute
+        limit: 50, // 50 requests per minute
       },
     ]),
     PrismaModule,

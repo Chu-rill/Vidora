@@ -36,6 +36,8 @@ export class AuthService {
     private readonly mailService: EmailService,
   ) {}
 
+  // AUTHENTICATION METHODS
+
   async register(registerDto: SignupDto) {
     const { username, email, password } = registerDto;
     this.logger.log(`Starting registration for email: ${email}`);
@@ -183,6 +185,27 @@ export class AuthService {
     }
   }
 
+  async logout(userId: string) {
+    this.logger.log(`Logout request for user: ${userId}`);
+
+    try {
+      await this.userService.updateOnlineStatus(userId, false);
+      this.logger.log(`User logged out successfully: ${userId}`);
+
+      return {
+        statusCode: HttpStatus.OK,
+        success: true,
+        message: 'User logged out successfully',
+        data: null,
+      };
+    } catch (error) {
+      this.logger.error(`Logout failed for user ${userId}:`, error.stack);
+      throw new InternalServerErrorException('Logout failed');
+    }
+  }
+
+  // Email Verification Methods
+
   async confirmEmailAddress(dto: VerifyEmailDto) {
     const { token } = dto;
     this.logger.log(
@@ -321,6 +344,8 @@ export class AuthService {
     }
   }
 
+  // Password Reset Methods
+
   async initiatePasswordReset(emailDto: EmailValidationDto) {
     const { email } = emailDto;
 
@@ -388,10 +413,11 @@ export class AuthService {
       await this.userRepository.updateUserPassword(user.id, hashedPassword);
 
       // Send confirmation email
-      await this.mailService.sendPasswordChangeConfirmation(
-        user.email,
-        user.name,
-      );
+      let data = {
+        subject: 'Password Change Confirmation',
+        username: user.username,
+      };
+      await this.mailService.sendPasswordChangeConfirmation(user.email, data);
 
       this.logger.log(`Password successfully reset for user: ${user.email}`);
       return { message: 'Password has been reset successfully' };
@@ -403,24 +429,7 @@ export class AuthService {
     }
   }
 
-  async logout(userId: string) {
-    this.logger.log(`Logout request for user: ${userId}`);
-
-    try {
-      await this.userService.updateOnlineStatus(userId, false);
-      this.logger.log(`User logged out successfully: ${userId}`);
-
-      return {
-        statusCode: HttpStatus.OK,
-        success: true,
-        message: 'User logged out successfully',
-        data: null,
-      };
-    } catch (error) {
-      this.logger.error(`Logout failed for user ${userId}:`, error.stack);
-      throw new InternalServerErrorException('Logout failed');
-    }
-  }
+  //Helper Methods
 
   private async generateAuthToken(userId: string): Promise<string> {
     try {
