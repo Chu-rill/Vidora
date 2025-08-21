@@ -24,6 +24,8 @@ import {
   EmailValidationSchema,
   EmailValidationDtoSwagger,
   EmailValidationDto,
+  ForgotPasswordSchema,
+  ForgotPasswordDto,
 } from './validation';
 import {
   ApiBearerAuth,
@@ -33,9 +35,11 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { ZodPipe } from 'src/utils/schema-validation/validation.pipe';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 
 @ApiTags('Authentication')
 @Controller('auth')
+@Throttle({ auth: { limit: 5, ttl: 60 } })
 export class AuthController {
   constructor(private authService: AuthService) {}
 
@@ -92,5 +96,29 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Email already verified' })
   async resendVerificationEmail(@Body() dto: EmailValidationDto) {
     return this.authService.resendEmailConfirmation(dto);
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ forgot: { limit: 3, ttl: 900 } })
+  @UsePipes(new ZodPipe(EmailValidationSchema))
+  @ApiOperation({ summary: 'Request password reset' })
+  @ApiResponse({ status: 200, description: 'Password reset email sent' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
+  async forgotPassword(@Body() dto: EmailValidationDto) {
+    return this.authService.initiatePasswordReset(dto);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ZodPipe(ForgotPasswordSchema))
+  @ApiOperation({ summary: 'Reset password with token' })
+  @ApiResponse({ status: 200, description: 'Password reset successfully' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid token or validation error',
+  })
+  async resetPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 }

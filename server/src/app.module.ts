@@ -13,8 +13,19 @@ import { EmailModule } from './email/email.module';
   imports: [
     ThrottlerModule.forRoot([
       {
-        ttl: 60000, // 1 minute
-        limit: 50, // 50 requests per minute
+        name: 'default',
+        ttl: 60, // 1 min
+        limit: 20, // 20 requests per minute
+      },
+      {
+        name: 'auth',
+        ttl: 60, // 1 min
+        limit: 5, // max 5 login attempts per min
+      },
+      {
+        name: 'forgot',
+        ttl: 900, // 15 mins
+        limit: 3, // max 3 reset requests per 15 mins
       },
     ]),
     PrismaModule,

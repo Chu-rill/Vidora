@@ -36,7 +36,7 @@ export class OauthService {
         auth.picture,
       );
 
-      const token = await this.authService.generateVerificationToken(user.id);
+      const token = await this.authService.generateActionToken(user.id);
       const data = {
         subject: 'Vidora welcome email',
         username: user.username,

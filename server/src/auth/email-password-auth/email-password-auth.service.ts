@@ -420,7 +420,11 @@ export class AuthService {
       await this.mailService.sendPasswordChangeConfirmation(user.email, data);
 
       this.logger.log(`Password successfully reset for user: ${user.email}`);
-      return { message: 'Password has been reset successfully' };
+      return {
+        statusCode: HttpStatus.OK,
+        success: true,
+        message: 'Password has been reset successfully',
+      };
     } catch (error) {
       this.logger.error('Reset password error:', error);
       throw new BadRequestException(

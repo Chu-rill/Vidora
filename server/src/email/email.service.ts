@@ -11,6 +11,7 @@ export class EmailService {
   private transporter: nodemailer.Transporter;
   private welcomeTemplatePath: string;
   private forgetPasswordTemplatePath: string;
+  private sendPasswordChangeConfirmationTemplatePath: string;
 
   constructor(private readonly configService: ConfigService) {
     this.transporter = nodemailer.createTransport({
@@ -31,6 +32,10 @@ export class EmailService {
     this.forgetPasswordTemplatePath = path.join(
       process.cwd(),
       'src/views/forgot-password.hbs',
+    );
+    this.sendPasswordChangeConfirmationTemplatePath = path.join(
+      process.cwd(),
+      'src/views/password-change-confirm.hbs',
     );
   }
 
@@ -91,8 +96,8 @@ export class EmailService {
     data: { subject: string; username: string; token: string },
   ): Promise<void> {
     try {
-      const verifyUrl = this.configService.get('VERIFY_URL');
-      const verificationUrl = `${verifyUrl}/forget-password?token=${data.token}`;
+      const verifyUrl = this.configService.get('PASSWORD_URL');
+      const verificationUrl = `${verifyUrl}?token=${data.token}`;
       const templateSource = await this.readTemplateFile(
         this.forgetPasswordTemplatePath,
       );
@@ -136,7 +141,7 @@ export class EmailService {
       const loginUrl = this.configService.get('LOGIN_URL');
 
       const templateSource = await this.readTemplateFile(
-        this.forgetPasswordTemplatePath,
+        this.sendPasswordChangeConfirmationTemplatePath,
       );
       const emailTemplate = handlebars.compile(templateSource);
 
