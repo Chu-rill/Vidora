@@ -207,9 +207,8 @@ export class UserRepository {
     }
   }
 
-  async getAllUsers(page: number = 1, limit: number = 10) {
+  async getAllUsers(page: number = 1, limit: number) {
     const skip = (page - 1) * limit;
-
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
         skip,
