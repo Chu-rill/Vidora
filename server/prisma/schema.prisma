@@ -9,25 +9,61 @@ datasource db {
 }
 
 model User {
-  id                String         @id @default(cuid())
-  username          String         @unique
-  email             String         @unique
-  password          String?
-  avatar            String? // nullable
-  isOnline          Boolean        @default(false)
-  lastSeen          DateTime       @default(now())
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
-  isVerified        Boolean        @default(false)
-  actionToken       String?        @unique
-  actionTokenExpiry DateTime?
-  rooms             Room[]         @relation("RoomParticipants")
-  createdRooms      Room[]         @relation("RoomCreator")
-  subscriptions     Subscription[]
-  callSessions      CallSession[]
-  transactions      Transaction[]
-  messages          Message[]
-  credits           Int            @default(0) // in-app virtual currency
+  id                     String          @id @default(cuid())
+  username               String          @unique
+  email                  String          @unique
+  password               String?
+  avatar                 String?
+  isOnline               Boolean         @default(false)
+  lastSeen               DateTime        @default(now())
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+  isVerified             Boolean         @default(false)
+  actionToken            String?         @unique
+  actionTokenExpiry      DateTime?
+  rooms                  Room[]          @relation("RoomParticipants")
+  createdRooms           Room[]          @relation("RoomCreator")
+  subscriptions          Subscription[]
+  callSessions           CallSession[]
+  transactions           Transaction[]
+  messages               Message[]
+  sentMessages           DirectMessage[] @relation("SentMessages")
+  receivedMessages       DirectMessage[] @relation("ReceivedMessages")
+  sentFriendRequests     Friendship[]    @relation("Requester")
+  receivedFriendRequests Friendship[]    @relation("Receiver")
+  credits                Int             @default(0)
+}
+
+model Friendship {
+  id          String       @id @default(cuid())
+  requesterId String
+  receiverId  String
+  requester   User         @relation("Requester", fields: [requesterId], references: [id])
+  receiver    User         @relation("Receiver", fields: [receiverId], references: [id])
+  status      FriendStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
+}
+
+enum FriendStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+  DECLINED
+}
+
+model DirectMessage {
+  id         String @id @default(cuid())
+  senderId   String
+  receiverId String
+
+  sender   User @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  content   String?
+  type      MessageType @default(TEXT)
+  mediaUrl  String?
+  mediaType MediaType?
+  createdAt DateTime    @default(now())
 }
 
 model Room {

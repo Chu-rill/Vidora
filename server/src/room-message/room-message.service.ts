@@ -3,7 +3,7 @@ import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 
 @Injectable()
-export class MessageService {
+export class RoomMessageService {
   create(createMessageDto: CreateMessageDto) {
     return 'This action adds a new message';
   }

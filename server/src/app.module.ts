@@ -8,8 +8,10 @@ import { GatewayModule } from './gateway/gateway.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { EmailModule } from './email/email.module';
-import { MessageModule } from './message/message.module';
+import { RoomMessageModule } from './room-message/room-message.module';
 import { CallModule } from './call/call.module';
+import { FriendshipModule } from './friendship/friendship.module';
+import { DirectMessageModule } from './direct-message/direct-message.module';
 
 @Module({
   imports: [
@@ -36,8 +38,10 @@ import { CallModule } from './call/call.module';
     RoomModule,
     GatewayModule,
     EmailModule,
-    MessageModule,
+    RoomMessageModule,
     CallModule,
+    FriendshipModule,
+    DirectMessageModule,
   ],
   controllers: [AppController],
   providers: [AppService],
