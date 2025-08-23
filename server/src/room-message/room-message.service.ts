@@ -1,26 +1,35 @@
 import { Injectable } from '@nestjs/common';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
+import { MessageType, MediaType } from '../../generated/prisma';
+import { RoomMessageRepository } from './room-message.repository';
 
 @Injectable()
 export class RoomMessageService {
-  create(createMessageDto: CreateMessageDto) {
-    return 'This action adds a new message';
+  constructor(private readonly roomMessageRepository: RoomMessageRepository) {}
+
+  async sendMessage(
+    roomId: string,
+    userId: string,
+    content?: string,
+    type: MessageType = MessageType.TEXT,
+    mediaUrl?: string,
+    mediaType?: MediaType,
+  ) {
+    // Business rules example: prevent empty messages unless media
+    if (!content && !mediaUrl) {
+      throw new Error('Message must have content or media');
+    }
+
+    return this.roomMessageRepository.createMessage(
+      roomId,
+      userId,
+      content,
+      type,
+      mediaUrl,
+      mediaType,
+    );
   }
 
-  findAll() {
-    return `This action returns all message`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} message`;
-  }
-
-  update(id: number, updateMessageDto: UpdateMessageDto) {
-    return `This action updates a #${id} message`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} message`;
+  async getRoomMessages(roomId: string, limit = 50, cursor?: string) {
+    return this.roomMessageRepository.getMessages(roomId, limit, cursor);
   }
 }

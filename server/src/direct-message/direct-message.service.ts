@@ -1,26 +1,28 @@
 import { Injectable } from '@nestjs/common';
-import { CreateDirectMessageDto } from './dto/create-direct-message.dto';
-import { UpdateDirectMessageDto } from './dto/update-direct-message.dto';
+import { DirectMessageRepository } from './direct-message-repository';
 
 @Injectable()
 export class DirectMessageService {
-  create(createDirectMessageDto: CreateDirectMessageDto) {
-    return 'This action adds a new directMessage';
+  constructor(private readonly repo: DirectMessageRepository) {}
+
+  async sendDirectMessage(
+    senderId: string,
+    receiverId: string,
+    content?: string,
+    mediaUrl?: string,
+  ) {
+    // business logic: check if they are friends before sending
+    // (optional: inject FriendshipService to validate friendship)
+    return this.repo.sendMessage(
+      senderId,
+      receiverId,
+      content,
+      undefined,
+      mediaUrl,
+    );
   }
 
-  findAll() {
-    return `This action returns all directMessage`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} directMessage`;
-  }
-
-  update(id: number, updateDirectMessageDto: UpdateDirectMessageDto) {
-    return `This action updates a #${id} directMessage`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} directMessage`;
+  async getChat(userId: string, friendId: string, limit = 50) {
+    return this.repo.getConversation(userId, friendId, limit);
   }
 }

@@ -1,34 +1,35 @@
-import { WebSocketGateway, SubscribeMessage, MessageBody } from '@nestjs/websockets';
+import {
+  WebSocketGateway,
+  SubscribeMessage,
+  WebSocketServer,
+  MessageBody,
+} from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
 import { DirectMessageService } from './direct-message.service';
-import { CreateDirectMessageDto } from './dto/create-direct-message.dto';
-import { UpdateDirectMessageDto } from './dto/update-direct-message.dto';
 
-@WebSocketGateway()
+@WebSocketGateway({ cors: true })
 export class DirectMessageGateway {
-  constructor(private readonly directMessageService: DirectMessageService) {}
+  @WebSocketServer() server: Server;
 
-  @SubscribeMessage('createDirectMessage')
-  create(@MessageBody() createDirectMessageDto: CreateDirectMessageDto) {
-    return this.directMessageService.create(createDirectMessageDto);
-  }
+  constructor(private readonly dmService: DirectMessageService) {}
 
-  @SubscribeMessage('findAllDirectMessage')
-  findAll() {
-    return this.directMessageService.findAll();
-  }
+  @SubscribeMessage('dm:send')
+  async handleSendDM(
+    @MessageBody()
+    data: {
+      senderId: string;
+      receiverId: string;
+      content: string;
+    },
+  ) {
+    const msg = await this.dmService.sendDirectMessage(
+      data.senderId,
+      data.receiverId,
+      data.content,
+    );
 
-  @SubscribeMessage('findOneDirectMessage')
-  findOne(@MessageBody() id: number) {
-    return this.directMessageService.findOne(id);
-  }
-
-  @SubscribeMessage('updateDirectMessage')
-  update(@MessageBody() updateDirectMessageDto: UpdateDirectMessageDto) {
-    return this.directMessageService.update(updateDirectMessageDto.id, updateDirectMessageDto);
-  }
-
-  @SubscribeMessage('removeDirectMessage')
-  remove(@MessageBody() id: number) {
-    return this.directMessageService.remove(id);
+    // Notify both sender and receiver
+    this.server.to(data.senderId).emit('dm:new', msg);
+    this.server.to(data.receiverId).emit('dm:new', msg);
   }
 }

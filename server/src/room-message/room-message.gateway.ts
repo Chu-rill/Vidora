@@ -1,41 +1,38 @@
 import {
   WebSocketGateway,
   SubscribeMessage,
+  WebSocketServer,
   MessageBody,
+  ConnectedSocket,
 } from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
 import { RoomMessageService } from './room-message.service';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
 
-@WebSocketGateway()
+@WebSocketGateway({ cors: true })
 export class RoomMessageGateway {
-  constructor(private readonly roomMessageService: RoomMessageService) {}
+  @WebSocketServer() server: Server;
 
-  @SubscribeMessage('createMessage')
-  create(@MessageBody() createMessageDto: CreateMessageDto) {
-    return this.roomMessageService.create(createMessageDto);
-  }
+  constructor(private messageService: RoomMessageService) {}
 
-  @SubscribeMessage('findAllMessage')
-  findAll() {
-    return this.roomMessageService.findAll();
-  }
-
-  @SubscribeMessage('findOneMessage')
-  findOne(@MessageBody() id: number) {
-    return this.roomMessageService.findOne(id);
-  }
-
-  @SubscribeMessage('updateMessage')
-  update(@MessageBody() updateMessageDto: UpdateMessageDto) {
-    return this.roomMessageService.update(
-      updateMessageDto.id,
-      updateMessageDto,
+  @SubscribeMessage('message:send')
+  async handleSendMessage(
+    @MessageBody() data: { roomId: string; userId: string; content: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const message = await this.messageService.sendMessage(
+      data.roomId,
+      data.userId,
+      data.content,
     );
+    // Broadcast to all room participants
+    this.server.to(data.roomId).emit('message:new', message);
   }
 
-  @SubscribeMessage('removeMessage')
-  remove(@MessageBody() id: number) {
-    return this.roomMessageService.remove(id);
+  @SubscribeMessage('room:join')
+  handleJoinRoom(
+    @MessageBody() roomId: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.join(roomId);
   }
 }
