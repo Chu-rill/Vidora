@@ -26,29 +26,66 @@ model User {
   subscriptions     Subscription[]
   callSessions      CallSession[]
   transactions      Transaction[]
+  messages          Message[]
   credits           Int            @default(0) // in-app virtual currency
 }
 
 model Room {
-  id              String        @id @default(cuid())
+  id              String   @id @default(cuid())
   name            String
   description     String?
-  type            RoomType      @default(PUBLIC)
+  type            RoomType @default(PUBLIC)
   creatorId       String
-  creator         User          @relation("RoomCreator", fields: [creatorId], references: [id])
-  participants    User[]        @relation("RoomParticipants")
-  maxParticipants Int           @default(10)
-  isActive        Boolean       @default(true)
+  creator         User     @relation("RoomCreator", fields: [creatorId], references: [id])
+  participants    User[]   @relation("RoomParticipants")
+  maxParticipants Int      @default(10)
+  isActive        Boolean  @default(true)
   price           Int? // price in cents, null for free rooms
-  isPaid          Boolean       @default(false)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  callSessions    CallSession[]
+  isPaid          Boolean  @default(false)
+  mode            RoomMode @default(CHAT)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  callSessions CallSession[]
+  messages     Message[]
 }
 
 enum RoomType {
   PUBLIC
   PRIVATE
+}
+
+enum RoomMode {
+  CHAT
+  VIDEO
+  BOTH
+}
+
+model Message {
+  id        String      @id @default(cuid())
+  roomId    String
+  room      Room        @relation(fields: [roomId], references: [id])
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  type      MessageType @default(TEXT) // NEW: distinguishes text/media/voice
+  content   String? // for plain text messages
+  mediaUrl  String? // file/image/audio/video URL
+  mediaType MediaType? // what kind of media was uploaded
+  createdAt DateTime    @default(now())
+}
+
+enum MessageType {
+  TEXT
+  MEDIA
+  VOICE
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  AUDIO
+  FILE
 }
 
 model Subscription {

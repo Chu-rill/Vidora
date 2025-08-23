@@ -8,6 +8,8 @@ import { GatewayModule } from './gateway/gateway.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { EmailModule } from './email/email.module';
+import { MessageModule } from './message/message.module';
+import { CallModule } from './call/call.module';
 
 @Module({
   imports: [
@@ -34,6 +36,8 @@ import { EmailModule } from './email/email.module';
     RoomModule,
     GatewayModule,
     EmailModule,
+    MessageModule,
+    CallModule,
   ],
   controllers: [AppController],
   providers: [AppService],
