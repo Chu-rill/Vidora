@@ -7,5 +7,6 @@ import { RoomMessageRepository } from './room-message.repository';
 @Module({
   providers: [RoomMessageGateway, RoomMessageService, RoomMessageRepository],
   imports: [PrismaModule],
+  exports: [RoomMessageService],
 })
 export class RoomMessageModule {}

@@ -5,9 +5,10 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { RoomRepository } from './room.repository';
 import { RoomAdminController } from './room.admin.controller';
 import { RoomGateway } from './room.gateway';
+import { RoomMessageModule } from 'src/room-message/room-message.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, RoomMessageModule],
   providers: [RoomService, RoomRepository, RoomGateway],
   controllers: [RoomController, RoomAdminController],
   exports: [RoomService],

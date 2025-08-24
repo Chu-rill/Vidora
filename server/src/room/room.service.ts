@@ -7,12 +7,14 @@ import {
 import { RoomRepository } from './room.repository';
 import { Room } from './validation';
 import { RoomGateway } from './room.gateway';
+import { RoomMessageService } from 'src/room-message/room-message.service';
 
 @Injectable()
 export class RoomService {
   constructor(
     private roomRepository: RoomRepository,
     private gateway: RoomGateway,
+    private roomMessageService: RoomMessageService,
   ) {}
 
   async createRoom(createRoomDto: Room, creatorId: string) {
@@ -81,10 +83,13 @@ export class RoomService {
 
     const newMember = await this.roomRepository.joinRoom(roomId, userId);
 
-    this.gateway.server.to(roomId).emit('room:userJoined', {
-      userId,
+    const systemMessage = await this.roomMessageService.sendSystemMessage(
       roomId,
-    });
+      `User ${userId} joined the room`,
+      userId,
+    );
+
+    this.gateway.server.to(roomId).emit('room:userJoined', systemMessage);
 
     return {
       statusCode: HttpStatus.OK,
@@ -111,10 +116,14 @@ export class RoomService {
 
     const oldMember = await this.roomRepository.leaveRoom(roomId, userId);
 
-    this.gateway.server.to(roomId).emit('room:userLeft', {
-      userId,
+    const systemMessage = await this.roomMessageService.sendSystemMessage(
       roomId,
-    });
+      `User ${userId} left the room`,
+      userId,
+    );
+
+    this.gateway.server.to(roomId).emit('room:userLeft', systemMessage);
+
     return {
       statusCode: HttpStatus.OK,
       success: true,

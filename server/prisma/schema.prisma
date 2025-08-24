@@ -115,6 +115,7 @@ enum MessageType {
   TEXT
   MEDIA
   VOICE
+  SYSTEM
 }
 
 enum MediaType {
