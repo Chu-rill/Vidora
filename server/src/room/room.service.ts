@@ -6,10 +6,14 @@ import {
 } from '@nestjs/common';
 import { RoomRepository } from './room.repository';
 import { Room } from './validation';
+import { RoomGateway } from './room.gateway';
 
 @Injectable()
 export class RoomService {
-  constructor(private roomRepository: RoomRepository) {}
+  constructor(
+    private roomRepository: RoomRepository,
+    private gateway: RoomGateway,
+  ) {}
 
   async createRoom(createRoomDto: Room, creatorId: string) {
     const { name, description, type, maxParticipants } = createRoomDto;
@@ -77,6 +81,11 @@ export class RoomService {
 
     const newMember = await this.roomRepository.joinRoom(roomId, userId);
 
+    this.gateway.server.to(roomId).emit('room:userJoined', {
+      userId,
+      roomId,
+    });
+
     return {
       statusCode: HttpStatus.OK,
       success: true,
@@ -101,6 +110,11 @@ export class RoomService {
     }
 
     const oldMember = await this.roomRepository.leaveRoom(roomId, userId);
+
+    this.gateway.server.to(roomId).emit('room:userLeft', {
+      userId,
+      roomId,
+    });
     return {
       statusCode: HttpStatus.OK,
       success: true,

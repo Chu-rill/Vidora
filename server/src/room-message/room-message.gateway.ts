@@ -7,9 +7,11 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { RoomMessageService } from './room-message.service';
+import { Logger } from '@nestjs/common';
 
-@WebSocketGateway({ cors: true })
+@WebSocketGateway(5002, { cors: { origin: '*' } })
 export class RoomMessageGateway {
+  // private readonly logger = new Logger(RoomMessageGateway.name);
   @WebSocketServer() server: Server;
 
   constructor(private messageService: RoomMessageService) {}

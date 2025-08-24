@@ -11,7 +11,7 @@ import { DirectMessageService } from './direct-message.service';
 export class DirectMessageGateway {
   @WebSocketServer() server: Server;
 
-  constructor(private readonly dmService: DirectMessageService) {}
+  constructor(private readonly service: DirectMessageService) {}
 
   @SubscribeMessage('dm:send')
   async handleSendDM(
@@ -21,8 +21,9 @@ export class DirectMessageGateway {
       receiverId: string;
       content: string;
     },
+    // message:MessageDto
   ) {
-    const msg = await this.dmService.sendDirectMessage(
+    const msg = await this.service.sendDirectMessage(
       data.senderId,
       data.receiverId,
       data.content,
