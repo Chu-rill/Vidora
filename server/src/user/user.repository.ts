@@ -22,31 +22,35 @@ export class UserRepository {
     return user;
   }
 
-  async createUserOauth(username: string, email: string, avatar: string) {
+  async createUserOauth(username: string, email: string, picture: string) {
     const user = await this.prisma.user.create({
       data: {
         username,
         email,
-        avatar,
+        avatar: picture,
       },
       select: {
         id: true,
         username: true,
         email: true,
         createdAt: true,
+        password: true,
+        avatar: true,
+        isOnline: true,
+        isVerified: true,
       },
     });
     return user;
   }
 
-  async verifyUser(id: string) {
+  async markUserAsVerified(id: string) {
     try {
       const user = await this.prisma.user.update({
         where: { id },
         data: {
           isVerified: true,
-          verificationToken: null,
-          verificationTokenExpiry: null,
+          actionToken: null,
+          actionTokenExpiry: null,
         },
         select: {
           id: true,
@@ -65,16 +69,42 @@ export class UserRepository {
     }
   }
 
-  async findByVerificationToken(token: string) {
+  async updateUserPassword(id: string, hashedPassword: string) {
+    try {
+      const user = await this.prisma.user.update({
+        where: { id },
+        data: {
+          password: hashedPassword,
+          actionToken: null,
+          actionTokenExpiry: null,
+        },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          avatar: true,
+          isOnline: true,
+          isVerified: true,
+          updatedAt: true,
+        },
+      });
+
+      return user;
+    } catch (error) {
+      throw new NotFoundException('User not found');
+    }
+  }
+
+  async findByActionToken(token: string) {
     const user = await this.prisma.user.findUnique({
-      where: { verificationToken: token },
+      where: { actionToken: token },
       select: {
         id: true,
         username: true,
         email: true,
         isVerified: true,
-        verificationToken: true,
-        verificationExpiry: true,
+        actionToken: true,
+        actionTokenExpiry: true,
       },
     });
 
@@ -85,7 +115,7 @@ export class UserRepository {
     return user;
   }
 
-  async updateVerificationToken(
+  async updateActionToken(
     userId: string,
     token: string,
     expiry: Date,
@@ -94,8 +124,8 @@ export class UserRepository {
       await this.prisma.user.update({
         where: { id: userId },
         data: {
-          verificationToken: token,
-          verificationTokenExpiry: expiry,
+          actionToken: token,
+          actionTokenExpiry: expiry,
         },
       });
     } catch (error) {
@@ -130,6 +160,7 @@ export class UserRepository {
         id: true,
         username: true,
         email: true,
+        password: true,
         avatar: true,
         isOnline: true,
         isVerified: true,
@@ -176,9 +207,8 @@ export class UserRepository {
     }
   }
 
-  async getAllUsers(page: number = 1, limit: number = 10) {
+  async getAllUsers(page: number = 1, limit: number) {
     const skip = (page - 1) * limit;
-
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
         skip,

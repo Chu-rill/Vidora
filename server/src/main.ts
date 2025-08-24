@@ -35,7 +35,17 @@ async function bootstrap() {
     .setTitle('Vidora API')
     .setDescription('The Vidora API documentation')
     .setVersion('1.0')
-    .addTag('auth', 'Authentication endpoints')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'JWT-auth', // <-- custom name to reference later
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

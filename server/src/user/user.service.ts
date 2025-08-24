@@ -1,7 +1,6 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateUserDto } from './validation';
 import { UserRepository } from './user.repository';
-import { success } from 'zod';
 
 @Injectable()
 export class UserService {
@@ -38,7 +37,20 @@ export class UserService {
   }
 
   async getAllUsers(page: number = 1, limit: number = 10) {
-    const { users, total } = await this.userRepository.getAllUsers(page, limit);
+    // Ensure safe defaults
+    if (page < 1) page = 1;
+    if (limit < 1) limit = 10;
+    if (limit > 100) limit = 100;
+
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 10;
+
+    const { users, total } = await this.userRepository.getAllUsers(
+      pageNum,
+      limitNum,
+    );
+
+    const totalPages = Math.ceil(total / limit);
 
     return {
       statusCode: HttpStatus.OK,
@@ -50,7 +62,9 @@ export class UserService {
           page,
           limit,
           total,
-          pages: Math.ceil(total / limit),
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
         },
       },
     };

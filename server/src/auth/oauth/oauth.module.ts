@@ -6,12 +6,14 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { EmailModule } from 'src/email/email.module';
 import { GoogleStrategy } from './strategies/google.strategy';
+import { EmailAndPasswordAuthModule } from '../email-password-auth/email-password-auth.module';
 
 @Module({
   controllers: [OauthController],
   providers: [OauthService, GoogleStrategy],
   imports: [
     UserModule,
+    EmailAndPasswordAuthModule,
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,

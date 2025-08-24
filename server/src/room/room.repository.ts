@@ -1,9 +1,6 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { RoomType, RoomMode } from '../../generated/prisma';
 
 @Injectable()
 export class RoomRepository {
@@ -12,42 +9,36 @@ export class RoomRepository {
   async createRoom(
     name: string,
     description: string,
-    type: string,
+    type: RoomType,
     maxParticipants: number,
     creatorId: string,
+    mode: RoomMode = RoomMode.CHAT,
+    price?: number,
+    isPaid?: boolean,
   ) {
-    const room = await this.prisma.room.create({
+    return this.prisma.room.create({
       data: {
         name,
         description,
         type,
         creatorId,
         maxParticipants,
+        mode,
+        price,
+        isPaid,
         participants: {
           connect: { id: creatorId },
         },
       },
       include: {
         participants: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            avatar: true,
-          },
+          select: { id: true, username: true, email: true, avatar: true },
         },
         creator: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            avatar: true,
-          },
+          select: { id: true, username: true, email: true, avatar: true },
         },
       },
     });
-
-    return room;
   }
 
   async getAllRooms(page: number = 1, limit: number = 10) {
@@ -59,20 +50,10 @@ export class RoomRepository {
         take: limit,
         include: {
           participants: {
-            select: {
-              id: true,
-              username: true,
-              email: true,
-              avatar: true,
-            },
+            select: { id: true, username: true, email: true, avatar: true },
           },
           creator: {
-            select: {
-              id: true,
-              username: true,
-              email: true,
-              avatar: true,
-            },
+            select: { id: true, username: true, email: true, avatar: true },
           },
         },
       }),
@@ -83,72 +64,46 @@ export class RoomRepository {
   }
 
   async getRoomById(id: string) {
-    const room = await this.prisma.room.findUnique({
+    return this.prisma.room.findUnique({
       where: { id },
       include: {
         participants: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            avatar: true,
-          },
+          select: { id: true, username: true, email: true, avatar: true },
         },
         creator: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            avatar: true,
+          select: { id: true, username: true, email: true, avatar: true },
+        },
+        messages: {
+          include: {
+            user: { select: { id: true, username: true, avatar: true } },
           },
         },
+        callSessions: true,
       },
     });
-    return room;
   }
 
   async joinRoom(roomId: string, userId: string) {
-    const room = await this.prisma.room.update({
+    return this.prisma.room.update({
       where: { id: roomId },
-      data: {
-        participants: {
-          connect: { id: userId },
-        },
-      },
+      data: { participants: { connect: { id: userId } } },
       include: {
         participants: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            avatar: true,
-          },
+          select: { id: true, username: true, email: true, avatar: true },
         },
       },
     });
-
-    return room;
   }
 
   async leaveRoom(roomId: string, userId: string) {
-    const room = await this.prisma.room.update({
+    return this.prisma.room.update({
       where: { id: roomId },
-      data: {
-        participants: {
-          disconnect: { id: userId },
-        },
-      },
+      data: { participants: { disconnect: { id: userId } } },
       include: {
         participants: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            avatar: true,
-          },
+          select: { id: true, username: true, email: true, avatar: true },
         },
       },
     });
-    return room;
   }
 }
