@@ -1,34 +1,49 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Patch,
+  Param,
+  Delete,
+  Get,
+  Body,
+  Request,
+} from '@nestjs/common';
 import { FriendshipService } from './friendship.service';
-import { CreateFriendshipDto } from './dto/create-friendship.dto';
-import { UpdateFriendshipDto } from './dto/update-friendship.dto';
 
 @Controller('friendship')
 export class FriendshipController {
   constructor(private readonly friendshipService: FriendshipService) {}
 
-  @Post()
-  create(@Body() createFriendshipDto: CreateFriendshipDto) {
-    return this.friendshipService.create(createFriendshipDto);
+  // Send friend request
+  @Post(':receiverId')
+  async addFriend(@Param('receiverId') receiverId: string, @Request() req) {
+    const requesterId = req.user.id; // assuming user is injected by auth guard
+    return this.friendshipService.addFriend(requesterId, receiverId);
   }
 
-  @Get()
-  findAll() {
-    return this.friendshipService.findAll();
+  // Accept friend request
+  @Patch(':id/accept')
+  async acceptFriendship(@Param('id') friendshipId: string) {
+    return this.friendshipService.acceptFriendship(friendshipId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.friendshipService.findOne(+id);
+  // Block a friendship
+  @Patch(':id/block')
+  async blockFriendship(@Param('id') friendshipId: string) {
+    return this.friendshipService.blockFriendship(friendshipId);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateFriendshipDto: UpdateFriendshipDto) {
-    return this.friendshipService.update(+id, updateFriendshipDto);
+  // List friends for a given user
+  @Get('me')
+  async listMyFriends(@Request() req) {
+    const userId = req.user.id; // current logged-in user
+    return this.friendshipService.listFriends(userId);
   }
 
+  // Optional: remove a friendship
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.friendshipService.remove(+id);
+  async remove(@Param('id') friendshipId: string) {
+    return this.friendshipService.blockFriendship(friendshipId);
+    // or implement a dedicated "removeFriendship" in service/repo
   }
 }

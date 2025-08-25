@@ -7,7 +7,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { DirectMessageService } from './direct-message.service';
 
-@WebSocketGateway({ cors: true })
+@WebSocketGateway(5002, { cors: { origin: '*' } })
 export class DirectMessageGateway {
   @WebSocketServer() server: Server;
 

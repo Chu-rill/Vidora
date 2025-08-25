@@ -5,7 +5,12 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { RoomRepository } from './room.repository';
-import { Room } from './validation';
+import {
+  CreateRoomDto,
+  GetAllRoomsQueryDto,
+  GetRoomDto,
+  RoomConnectionDto,
+} from './validation';
 import { RoomGateway } from './room.gateway';
 import { RoomMessageService } from 'src/room-message/room-message.service';
 
@@ -17,15 +22,16 @@ export class RoomService {
     private roomMessageService: RoomMessageService,
   ) {}
 
-  async createRoom(createRoomDto: Room, creatorId: string) {
-    const { name, description, type, maxParticipants } = createRoomDto;
+  async createRoom(createRoomDto: CreateRoomDto, creatorId: string) {
+    const { name, description, type, maxParticipants, mode } = createRoomDto;
 
     const room = await this.roomRepository.createRoom(
       name,
-      description!,
-      type!,
-      maxParticipants!,
+      description,
+      type,
+      maxParticipants,
       creatorId,
+      mode,
     );
 
     return {
@@ -36,7 +42,8 @@ export class RoomService {
     };
   }
 
-  async getAllRooms(page: number = 1, limit: number = 10) {
+  async getAllRooms(dto: GetAllRoomsQueryDto) {
+    let { page, limit } = dto;
     const { rooms, total } = await this.roomRepository.getAllRooms(page, limit);
 
     return {
@@ -55,7 +62,8 @@ export class RoomService {
     };
   }
 
-  async getRoomById(id: string) {
+  async getRoomById(dto: GetRoomDto) {
+    const { id } = dto;
     const room = await this.roomRepository.getRoomById(id);
 
     if (!room) {
@@ -70,7 +78,9 @@ export class RoomService {
     };
   }
 
-  async joinRoom(roomId: string, userId: string) {
+  async joinRoom(dto: RoomConnectionDto) {
+    const { roomId, userId } = dto;
+
     const room = await this.roomRepository.getRoomById(roomId);
 
     if (!room) {
@@ -99,7 +109,8 @@ export class RoomService {
     };
   }
 
-  async leaveRoom(roomId: string, userId: string) {
+  async leaveRoom(dto: RoomConnectionDto) {
+    const { roomId, userId } = dto;
     const room = await this.roomRepository.getRoomById(roomId);
 
     if (!room) {
