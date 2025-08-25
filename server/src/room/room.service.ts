@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { RoomRepository } from './room.repository';
 import {
@@ -13,11 +14,14 @@ import {
 } from './validation';
 import { RoomGateway } from './room.gateway';
 import { RoomMessageService } from 'src/room-message/room-message.service';
+import { UserRepository } from 'src/user/user.repository';
 
 @Injectable()
 export class RoomService {
+  private readonly logger = new Logger(RoomService.name);
   constructor(
     private roomRepository: RoomRepository,
+    private userRepository: UserRepository,
     private gateway: RoomGateway,
     private roomMessageService: RoomMessageService,
   ) {}
@@ -91,15 +95,19 @@ export class RoomService {
       throw new BadRequestException('Room is full');
     }
 
-    const newMember = await this.roomRepository.joinRoom(roomId, userId);
+    const [newMember, user] = await Promise.all([
+      this.roomRepository.joinRoom(roomId, userId),
+      this.userRepository.getUserById(userId),
+    ]);
 
     const systemMessage = await this.roomMessageService.sendSystemMessage(
       roomId,
-      `User ${userId} joined the room`,
+      `User ${user.username} joined the room`,
       userId,
     );
 
-    this.gateway.server.to(roomId).emit('room:userJoined', systemMessage);
+    // this.gateway.server.to(roomId).emit('room:userJoined', systemMessage);
+    this.gateway.server.emit('room:userJoined', systemMessage);
 
     return {
       statusCode: HttpStatus.OK,
@@ -125,15 +133,19 @@ export class RoomService {
       throw new BadRequestException('You are not a participant of this room');
     }
 
-    const oldMember = await this.roomRepository.leaveRoom(roomId, userId);
+    const [oldMember, user] = await Promise.all([
+      this.roomRepository.leaveRoom(roomId, userId),
+      this.userRepository.getUserById(userId),
+    ]);
 
     const systemMessage = await this.roomMessageService.sendSystemMessage(
       roomId,
-      `User ${userId} left the room`,
+      `User ${user.username} left the room`,
       userId,
     );
 
-    this.gateway.server.to(roomId).emit('room:userLeft', systemMessage);
+    // this.gateway.server.to(roomId).emit('room:userLeft', systemMessage);
+    this.gateway.server.emit('room:userLeft', systemMessage);
 
     return {
       statusCode: HttpStatus.OK,
